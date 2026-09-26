@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "declaration": true,
+        "target": "ES2020",
+        "moduleResolution": "bundler",
+        "allowJs": true,
+        "checkJs": true,
+        "resolveJsonModule": true,
+        "noImplicitAny": false,
+        "outDir": "./dist",
+        "rootDir": "./src",
+        "emitDeclarationOnly": true
+    },
+    "include": [
+        "src/**/*.js"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

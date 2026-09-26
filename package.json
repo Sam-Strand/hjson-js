@@ -1,43 +1,32 @@
 {
-  "name": "hjson",
-  "description": "A user interface for JSON.",
-  "main": "./lib/hjson.js",
-  "author": "Christian Zangl",
-  "version": "3.2.2",
-  "keywords": [
-    "json",
-    "comments",
-    "config",
-    "hjson",
-    "parser",
-    "serializer",
-    "human"
-  ],
-  "bin": {
-    "hjson": "./bin/hjson"
-  },
-  "scripts": {
-    "test": "node ./test/test.js",
-    "lint": "node_modules/eslint/bin/eslint.js -f unix bin/hjson lib/*.js",
-    "build_v1": "node -e 'console.log(\"module.exports=\\\"\"+eval(\"(\"+process.argv[1]+\")\").version+\"\\\";\");' -- \"`cat package.json`\" > lib/hjson-version.js",
-    "build_v2": "node -e 'var v=\" * Hjson v\"+eval(\"(\"+process.argv[1]+\")\").version; if (v!==process.argv[2]) throw new Error(\"ver\");' -- \"`cat package.json`\" \"`grep -E '\\* Hjson v.*$' lib/hjson.js`\"",
-    "build_bundle": "node_modules/browserify/bin/cmd.js -p browserify-header --ignore os -s Hjson -o bundle/hjson.js lib/hjson.js",
-    "build_min": "node node_modules/uglify-js/bin/uglifyjs bundle/hjson.js --comments=/^!/ -c -m -o bundle/hjson.min.js",
-    "build": "npm run build_v1 && npm run build_v2 && npm run test && npm run lint && npm run build_bundle && npm run build_min"
-  },
-  "homepage": "https://hjson.github.io",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/hjson/hjson-js.git"
-  },
-  "bugs": {
-    "url": "https://github.com/hjson/hjson-js/issues"
-  },
-  "license": "MIT",
-  "devDependencies": {
-    "browserify": "^13.3.0",
-    "browserify-header": "0.9.2",
-    "eslint": "^3.13.1",
-    "uglify-js": "^2.7.5"
-  }
+    "name": "hjson",
+    "version": "3.2.2",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Sam-Strand/hjson-js.git"
+    },
+    "author": "Саадовский М.К.",
+    "type": "module",
+    "exports": {
+        ".": {
+            "development": "./src/index.js",
+            "import": "./dist/hjson.js",
+            "types": "./dist/index.d.ts"
+        },
+        "./vite-plugin-hjson": {
+            "development": "./src/vite-plugin-hjson.js",
+            "import": "./dist/vite-plugin-hjson.js",
+            "types": "./dist/vite-plugin-hjson.d.ts"
+        }
+    },
+    "license": "MIT",
+    "devDependencies": {
+        "@typescript/typescript6": "^6.0.2",
+        "vite": "^8.3.1",
+        "vite-plugin-dts": "^5.1.1"
+    }
 }

@@ -1,0 +1,8 @@
+services:
+    hjson:
+        build: .
+        volumes:
+            - .:/hjson
+        working_dir: /hjson
+        stdin_open: true
+        tty: true
