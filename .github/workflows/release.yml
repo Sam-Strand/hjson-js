@@ -6,11 +6,10 @@ on:
       - "v*"
 
 permissions:
-  contents: read
-  packages: write
+  contents: write
 
 jobs:
-  publish:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,14 +21,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 26
-          registry-url: https://npm.pkg.github.com
-          scope: "@sam-strand"
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm build
 
-      - run: pnpm publish --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: pnpm pack
+        # создаёт hjson-<version>.tgz в корне
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "*.tgz"
+          generate_release_notes: true
