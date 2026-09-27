@@ -1,6 +1,6 @@
 {
     "name": "hjson",
-    "version": "4.0.0",
+    "version": "4.0.5",
     "scripts": {
         "dev": "vite",
         "build": "vite build",

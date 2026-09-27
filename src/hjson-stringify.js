@@ -33,7 +33,7 @@ module.exports = function (data, opt) {
     var separator = ''; // comma separator
     var dsfDef = null;
     var sortProps = false;
-    var emitRootBraces = false//true;
+    var emitRootBraces = true;
     var token = plainToken;
 
     if (opt && typeof opt === 'object') {
@@ -43,7 +43,7 @@ module.exports = function (data, opt) {
         keepComments = opt.keepWsc;
         condense = opt.condense || 0;
         bracesSameLine = opt.bracesSameLine;
-        emitRootBraces = false //opt.emitRootBraces !== false;
+        emitRootBraces = opt.emitRootBraces !== false;
         quoteKeys = opt.quotes === 'all' || opt.quotes === 'keys';
         quoteStrings = opt.quotes === 'all' || opt.quotes === 'strings' || opt.separator === true;
         if (quoteStrings || opt.multiline == 'off') multiline = 0;
@@ -155,7 +155,7 @@ module.exports = function (data, opt) {
             needsEscape.lastIndex = 0;
             needsEscapeML.lastIndex = 0;
             if (!needsEscape.test(string)) return wrap(token.qstr, string);
-            else if (!needsEscapeML.test(string) && !isRootObject && multiline) return mlString(string, gap);
+            else if (!needsEscapeML.test(string) && !isRootObject && multiline) return mlString(string, gap, bracesSameLine);
             else return wrap(token.qstr, quoteReplace(string));
         } else {
             // return without quotes
@@ -163,24 +163,21 @@ module.exports = function (data, opt) {
         }
     }
 
-    function mlString(string, gap) {
-        // wrap the string into the ''' (multiline) format
-
-        var i, a = string.replace(/\r/g, "").split('\n');
-        gap += indent;
+    function mlString(string, gap, sameLine) {
+        var i, a = string.replace(/\r/g, '').split('\n')
+        gap += indent
 
         if (a.length === 1) {
-            // The string contains only a single line. We still use the multiline
-            // format as it avoids escaping the \ character (e.g. when used in a
-            // regex).
-            return wrap(token.mstr, a[0]);
+            return wrap(token.mstr, a[0])
         } else {
-            var res = eol + gap + token.mstr[0];
+            var res = (sameLine ? '' : eol + gap) + token.mstr[0]
+
             for (i = 0; i < a.length; i++) {
-                res += eol;
-                if (a[i]) res += gap + a[i];
+                res += eol
+                if (a[i]) res += gap + a[i]
             }
-            return res + eol + gap + token.mstr[1];
+
+            return res + eol + gap + token.mstr[1]
         }
     }
 
@@ -390,20 +387,32 @@ module.exports = function (data, opt) {
 
     runDsf = dsf.loadDsf(dsfDef, 'stringify');
 
-    var res = "";
-    var comments = keepComments ? comments = (common.getComment(data) || {}).r : null;
-    if (comments && comments[0]) res = comments[0] + '\n';
+    var dataComments = keepComments ? common.getComment(data) : null
+    var comments = dataComments && dataComments.r
+    var res = str(data, null, true, true)
 
-    // get the result of stringifying the data.
-    res += str(data, null, true, true);
+    if (
+        typeof data === 'object' &&
+        data !== null &&
+        !Array.isArray(data) &&
+        !emitRootBraces &&
+        res[0] === '{' &&
+        res[res.length - 1] === '}'
+    ) {
+        res = res.slice(1, -1)
+            .replace(new RegExp('\\n' + escapeRegExp(indent), 'g'), '\n')
 
-    if (comments) res += comments[1] || "";
-
-    if (typeof data === 'object' && data !== null && !Array.isArray(data) && !emitRootBraces && res[0] === '{' && res[res.length - 1] === '}') {
-        res = res.slice(1, -1).replace(new RegExp('\\n' + escapeRegExp(indent), 'g'), '\n');
-        if (res[0] === '\n') res = res.slice(1);
-        if (res[res.length - 1] === '\n') res = res.slice(0, -1);
+        if (res[0] === '\n') res = res.slice(1)
+        if (res[res.length - 1] === '\n') res = res.slice(0, -1)
     }
 
-    return res;
+    if (emitRootBraces && comments && comments[0]) {
+        res = comments[0] + eol + res
+    }
+
+    if (comments) res += comments[1] || ''
+
+    if (!res.endsWith(eol)) res += eol
+
+    return res
 };
