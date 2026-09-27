@@ -10,6 +10,7 @@
         "type": "git",
         "url": "git+https://github.com/Sam-Strand/hjson-js.git"
     },
+    "files": ["dist", "README.md", "LICENSE"],
     "author": "Саадовский М.К.",
     "type": "module",
     "exports": {
