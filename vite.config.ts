@@ -1,9 +1,11 @@
 import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
+import hjson from './src/vite-plugin-hjson'
 
 export default defineConfig({
     plugins: [
-        dts()
+        dts(),
+        hjson()
     ],
     build: {
         lib: {

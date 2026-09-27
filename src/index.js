@@ -1,22 +1,17 @@
-import common from './hjson-common'
-import parse from './hjson-parse'
-import stringify from './hjson-stringify'
-import comments from './hjson-comments'
-import dsf from './hjson-dsf'
+import { EOL, setEndOfLine } from './common'
+import parse from './parse'
+import stringify from './stringify'
+import standardDsf from './dsf'
 
 const Hjson = {
     parse,
     stringify,
 
     endOfLine() {
-        return common.EOL
+        return EOL
     },
 
-    setEndOfLine(eol) {
-        if (eol === '\n' || eol === '\r\n') {
-            common.EOL = eol
-        }
-    },
+    setEndOfLine,
 
     rt: {
         parse(text, options) {
@@ -31,17 +26,14 @@ const Hjson = {
             return stringify(value, options)
         }
     },
-
-    comments,
-    dsf: dsf.std
+    dsf: standardDsf
 }
 
 export {
     parse,
     stringify,
-    common,
-    comments,
-    dsf
+    EOL,
+    standardDsf as dsf
 }
 
 export default Hjson
