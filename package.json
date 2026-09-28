@@ -1,6 +1,6 @@
 {
     "name": "hjson",
-    "version": "4.2.0",
+    "version": "4.2.1",
     "scripts": {
         "dev": "vite",
         "build": "vite build",
@@ -16,7 +16,7 @@
     "exports": {
         ".": {
             "development": "./src/index.js",
-            "import": "./dist/hjson.js",
+            "import": "./dist/index.js",
             "types": "./dist/index.d.ts"
         },
         "./vite-plugin-hjson": {
