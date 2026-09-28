@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import parse from './parse'
+import parse from './parse.js'
 
 export default function hjson() {
     return {

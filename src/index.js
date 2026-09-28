@@ -1,7 +1,7 @@
-import { EOL, setEndOfLine } from './common'
-import parse from './parse'
-import stringify from './stringify'
-import standardDsf from './dsf'
+import { EOL, setEndOfLine } from './common.js'
+import parse from './parse.js'
+import stringify from './stringify.js'
+import standardDsf from './dsf.js'
 
 const Hjson = {
     parse,

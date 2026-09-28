@@ -1,5 +1,5 @@
-import { tryParseNumber, getComment, EOL, forceComment} from './common'
-import { loadDsf } from './dsf'
+import { tryParseNumber, getComment, EOL, forceComment} from './common.js'
+import { loadDsf } from './dsf.js'
 
 const plainToken = {
     obj: ['{', '}'],

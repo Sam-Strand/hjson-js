@@ -1,5 +1,5 @@
-import { loadDsf } from './dsf'
-import { createComment, getComment, tryParseNumber } from './common'
+import { loadDsf } from './dsf.js'
+import { createComment, getComment, tryParseNumber } from './common.js'
 
 export default function parse(source, opt) {
     var text
