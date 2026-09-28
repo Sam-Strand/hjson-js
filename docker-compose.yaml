@@ -3,7 +3,6 @@ services:
         build: .
         volumes:
             - .:/hjson
-            - node_modules:/hjson/node_modules
         working_dir: /hjson
         stdin_open: true
         tty: true

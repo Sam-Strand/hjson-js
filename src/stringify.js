@@ -167,14 +167,12 @@ export default function stringify(data, opt) {
         })
     }
 
-    function quote(string, gap, hasComment, isRootObject) {
+    function quote(string, gap, hasComment, isRootObject, noIndent) {
         if (!string) return wrap(token.qstr, '')
 
         needsQuotes.lastIndex = 0
         startsWithKeyword.lastIndex = 0
 
-        // Check if we can insert this string without quotes
-        // see hjson syntax (must not parse as true, false, null or number)
         if (
             quoteStrings ||
             hasComment ||
@@ -182,25 +180,20 @@ export default function stringify(data, opt) {
             tryParseNumber(string, true) !== undefined ||
             startsWithKeyword.test(string)
         ) {
-            // If the string contains no control characters, no quote characters, and no
-            // backslash characters, then we can safely slap some quotes around it.
-            // Otherwise we first check if the string can be expressed in multiline
-            // format or we must replace the offending characters with safe escape
-            // sequences.
             needsEscape.lastIndex = 0
             needsEscapeML.lastIndex = 0
             if (!needsEscape.test(string)) return wrap(token.qstr, string)
             if (!needsEscapeML.test(string) && !isRootObject && multiline)
-                return mlString(string, gap, bracesSameLine)
+                // для элементов массива — sameLine=true, shallow=true
+                return mlString(string, gap, bracesSameLine || noIndent, noIndent)
             return wrap(token.qstr, quoteReplace(string))
         }
-        // return without quotes
         return wrap(token.str, string)
     }
 
-    function mlString(string, gap, sameLine) {
+    function mlString(string, gap, sameLine, shallow) {
         const a = string.replace(/\r/g, '').split('\n')
-        gap += indent
+        if (!shallow) gap += indent
 
         if (a.length === 1 && a[0][0] !== "'" && a[0][a[0].length - 1] !== "'") {
             return wrap(token.mstr, a[0])
@@ -249,7 +242,7 @@ export default function stringify(data, opt) {
 
         switch (typeof value) {
             case 'string':
-                return quote(value, gap, hasComment, isRootObject)
+                return quote(value, gap, hasComment, isRootObject, noIndent)
 
             case 'number':
                 // JSON numbers must be finite. Encode non-finite numbers as null.
