@@ -1,5 +1,63 @@
 # hjson-js
 
+# Hjson Parser & Stringifier — справка по настройкам
+
+## `parse(source, opt)`
+
+| Опция | Тип | По умолчанию | Описание |
+|-------|-----|--------------|----------|
+| `keepWsc` | `boolean` | `false` | Сохранять комментарии и whitespace (WSC = whitespace & comments). Доступны через `getComment()`. |
+| `dsf` | `object \| null` | `null` | Domain Specific Formats — кастомные форматы, распознаваемые в quoteless-строках. |
+
+---
+
+## `stringify(data, opt)`
+
+### Форматирование
+
+| Опция | Тип | По умолчанию | Описание |
+|-------|-----|--------------|----------|
+| `eol` | `'\n' \| '\r\n'` | `EOL` | Символ конца строки. |
+| `space` | `number \| string` | `'  '` | Отступ: число пробелов или готовая строка. |
+| `bracesSameLine` | `boolean` | `false` | Открывающая `{`/`[`/`'''` на одной строке с ключом. |
+| `emitRootBraces` | `boolean` | `true` | Оборачивать корневой объект в `{}`. Если `false` — скобки убираются. |
+| `separator` | `boolean` | `false` | Добавлять запятые между элементами. Побочно включает `quoteStrings`. |
+| `multiline` | `'std' \| 'no-tabs' \| 'off'` | `'std'` | Режим multiline-строк (`'''`):<br>`std` — табы разрешены;<br>`no-tabs` — табы экранируются;<br>`off` — multiline отключён. |
+| `condense` | `number` | `0` | Порог схлопывания объекта/массива в одну строку. `0` — выключено. |
+
+### Кавычки
+
+| Опция | Тип | По умолчанию | Описание |
+|-------|-----|--------------|----------|
+| `quotes` | `'min' \| 'keys' \| 'strings' \| 'all'` | `'min'` | Режим кавычек (см. таблицу ниже). |
+| `quoteChar` | `'"' \| "'"` | `'"'` | Символ кавычек. |
+
+### Комментарии и порядок
+
+| Опция | Тип | По умолчанию | Описание |
+|-------|-----|--------------|----------|
+| `keepWsc` | `boolean` | `false` | Сохранять комментарии/whitespace при сериализации (из `getComment(data)`). |
+| `sortProps` | `boolean` | `false` | Сортировать ключи объекта по алфавиту. |
+| `dsf` | `object \| null` | `null` | Domain Specific Formats — кастомные форматы для значений. |
+
+### Прочее
+
+| Опция | Тип | По умолчанию | Описание |
+|-------|-----|--------------|----------|
+| `colors` | `boolean` | `false` | ANSI-раскраска вывода (для терминала). |
+
+---
+
+## Режимы `quotes`
+
+| Режим | Ключи | Строки | Комментарий |
+|-------|-------|--------|-------------|
+| `'min'` (дефолт) | кавычки только если обязательны | кавычки только если обязательны | минимально возможное число кавычек |
+| `'keys'` | все в кавычках | только если обязательны | |
+| `'strings'` | только если обязательны | все в кавычках | |
+| `'all'` | все в кавычках | все в кавычках | |
+
+---
 [![Build Status](https://img.shields.io/travis/hjson/hjson-js.svg?style=flat-square)](http://travis-ci.org/hjson/hjson-js)
 [![NPM version](https://img.shields.io/npm/v/hjson.svg?style=flat-square)](http://www.npmjs.com/package/hjson)
 [![License](https://img.shields.io/github/license/hjson/hjson-js.svg?style=flat-square)](https://github.com/hjson/hjson-js/blob/master/LICENSE)

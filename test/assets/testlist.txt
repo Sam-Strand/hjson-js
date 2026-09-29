@@ -78,7 +78,6 @@ strings2_test.hjson
 strings_test.hjson
 trail_test.hjson
 stringify/quotes_all_test.hjson
-stringify/quotes_always_test.hjson
 stringify/quotes_keys_test.hjson
 stringify/quotes_strings_ml_test.json
 stringify/quotes_strings_test.hjson

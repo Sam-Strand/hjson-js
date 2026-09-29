@@ -1,5 +1,6 @@
-import { tryParseNumber, getComment, EOL, forceComment} from './common.js'
+import { tryParseNumber, getComment, EOL, forceComment } from './common.js'
 import { loadDsf } from './dsf.js'
+import { normalizeOptions } from './options.js'
 
 const plainToken = {
     obj: ['{', '}'],
@@ -19,6 +20,26 @@ const plainToken = {
     rem: ['', ''],
 }
 
+function makeColorToken() {
+    return {
+        obj: ['\x1b[37m{\x1b[0m', '\x1b[37m}\x1b[0m'],
+        arr: ['\x1b[37m[\x1b[0m', '\x1b[37m]\x1b[0m'],
+        key: ['\x1b[33m', '\x1b[0m'],
+        qkey: ['\x1b[33m"', '"\x1b[0m'],
+        col: ['\x1b[37m:\x1b[0m', ''],
+        com: ['\x1b[37m,\x1b[0m', ''],
+        str: ['\x1b[37;1m', '\x1b[0m'],
+        qstr: ['\x1b[37;1m"', '"\x1b[0m'],
+        mstr: ["\x1b[37;1m'''", "'''\x1b[0m"],
+        num: ['\x1b[36;1m', '\x1b[0m'],
+        lit: ['\x1b[36m', '\x1b[0m'],
+        dsf: ['\x1b[37m', '\x1b[0m'],
+        esc: ['\x1b[31m\\', '\x1b[0m'],
+        uni: ['\x1b[31m\\u', '\x1b[0m'],
+        rem: ['\x1b[35m', '\x1b[0m'],
+    }
+}
+
 /**
  * Serialize a JS value to an Hjson string.
  *
@@ -27,90 +48,45 @@ const plainToken = {
  * @returns {string}
  */
 export default function stringify(data, opt) {
-    // options
-    let eol = EOL
-    let indent = '  '
-    let keepComments = false
-    let bracesSameLine = false
-    let quoteKeys = false
-    let quoteStrings = false
-    let condense = 0
-    let multiline = 1 // std=1, no-tabs=2, off=0
-    let separator = '' // comma separator
-    let dsfDef = null
-    let sortProps = false
-    let emitRootBraces = true
-    let token = plainToken
-    let quoteChar = '"'
+    const nopt = normalizeOptions(opt)
+    const {
+        eol,
+        indent,
+        keepComments,
+        bracesSameLine,
+        emitRootBraces,
+        quoteKeys,
+        quoteChar,
+        condense,
+        separator,
+        dsf,
+        sortProps,
+        colors,
+    } = nopt
+    let { quoteStrings, multiline } = nopt
+    let token = colors === true ? makeColorToken() : plainToken
 
-    if (opt && typeof opt === 'object') {
-        opt.quotes = opt.quotes === 'always' ? 'strings' : opt.quotes // legacy
-
-        if (opt.quoteChar === "'" || opt.quoteChar === '"') {
-            quoteChar = opt.quoteChar
-        }
-
-        if (opt.eol === '\n' || opt.eol === '\r\n') eol = opt.eol
-        keepComments = opt.keepWsc
-        condense = opt.condense || 0
-        bracesSameLine = opt.bracesSameLine
-        emitRootBraces = opt.emitRootBraces !== false
-        quoteKeys = opt.quotes === 'all' || opt.quotes === 'keys'
-        quoteStrings = opt.quotes === 'all' || opt.quotes === 'strings' || opt.separator === true
-        if (quoteStrings || opt.multiline === 'off') multiline = 0
-        else multiline = opt.multiline === 'no-tabs' ? 2 : 1
-        separator = opt.separator === true ? token.com[0] : ''
-        dsfDef = opt.dsf
-        sortProps = opt.sortProps
-
-        // If the space parameter is a number, make an indent string containing that
-        // many spaces. If it is a string, it will be used as the indent string.
-        if (typeof opt.space === 'number') {
-            indent = new Array(opt.space + 1).join(' ')
-        } else if (typeof opt.space === 'string') {
-            indent = opt.space
-        }
-
-        if (opt.colors === true) {
-            token = {
-                obj: ['\x1b[37m{\x1b[0m', '\x1b[37m}\x1b[0m'],
-                arr: ['\x1b[37m[\x1b[0m', '\x1b[37m]\x1b[0m'],
-                key: ['\x1b[33m', '\x1b[0m'],
-                qkey: ['\x1b[33m"', '"\x1b[0m'],
-                col: ['\x1b[37m:\x1b[0m', ''],
-                com: ['\x1b[37m,\x1b[0m', ''],
-                str: ['\x1b[37;1m', '\x1b[0m'],
-                qstr: ['\x1b[37;1m"', '"\x1b[0m'],
-                mstr: ["\x1b[37;1m'''", "'''\x1b[0m"],
-                num: ['\x1b[36;1m', '\x1b[0m'],
-                lit: ['\x1b[36m', '\x1b[0m'],
-                dsf: ['\x1b[37m', '\x1b[0m'],
-                esc: ['\x1b[31m\\', '\x1b[0m'],
-                uni: ['\x1b[31m\\u', '\x1b[0m'],
-                rem: ['\x1b[35m', '\x1b[0m'],
-            }
-        }
-        if (quoteChar !== '"') {
-            const q = quoteChar
-            token = {
-                ...token,
-                qkey: [
-                    token.qkey[0].replace(/"/g, q),
-                    token.qkey[1].replace(/"/g, q),
-                ],
-                qstr: [
-                    token.qstr[0].replace(/"/g, q),
-                    token.qstr[1].replace(/"/g, q),
-                ],
-            }
-        }
-        for (const k of Object.keys(plainToken)) {
-            token[k].push(plainToken[k][0].length, plainToken[k][1].length)
+    if (quoteChar !== '"') {
+        const q = quoteChar
+        token = {
+            ...token,
+            qkey: [
+                token.qkey[0].replace(/"/g, q),
+                token.qkey[1].replace(/"/g, q),
+            ],
+            qstr: [
+                token.qstr[0].replace(/"/g, q),
+                token.qstr[1].replace(/"/g, q),
+            ],
         }
     }
 
-    //
-    const runDsf = loadDsf(dsfDef, 'stringify') // domain specific formats
+    // длины для wrap() — ВСЕГДА, после финального token
+    for (const k of Object.keys(plainToken)) {
+        token[k].push(plainToken[k][0].length, plainToken[k][1].length)
+    }
+
+    const runDsf = loadDsf(dsf, 'stringify') // domain specific formats
 
     const commonRange =
         '\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff'
@@ -120,17 +96,17 @@ export default function stringify(data, opt) {
     // needsQuotes tests if the string can be written as a quoteless string (like needsEscape but without \\ and \")
     const needsQuotes = new RegExp(
         '^\\s|^"|^\'|^#|^\\/\\*|^\\/\\/|^\\{|^\\}|^\\[|^\\]|^:|^,|\\s$|[\x00-\x1f' +
-            commonRange +
-            ']',
+        commonRange +
+        ']',
         'g',
     )
     // needsEscapeML tests if the string can be written as a multiline string (like needsEscape but without \n, \r, \\, \", \t unless multines is 'std')
     const needsEscapeML = new RegExp(
         '\'\'\'|^[\\s]+$|[\x00-' +
-            (multiline === 2 ? '\x09' : '\x08') +
-            '\x0b\x0c\x0e-\x1f' +
-            commonRange +
-            ']',
+        (multiline === 2 ? '\x09' : '\x08') +
+        '\x0b\x0c\x0e-\x1f' +
+        commonRange +
+        ']',
         'g',
     )
     // starts with a keyword and optionally is followed by a comment
@@ -228,7 +204,7 @@ export default function stringify(data, opt) {
             s = forceComment(s)
             const len = s.length
             let i = 0
-            for (; i < len && s[i] <= ' '; i++) {}
+            for (; i < len && s[i] <= ' '; i++) { }
             if (trim && i > 0) s = s.substr(i)
             if (i < len) return prefix + wrap(token.rem, s)
             return s
@@ -378,10 +354,10 @@ export default function stringify(data, opt) {
                         vs = str(v, comments && ca)
                         partial.push(
                             quoteKey(k) +
-                                token.col[0] +
-                                (startsWithNL(vs) ? '' : ' ') +
-                                vs +
-                                (setsep ? separator : ''),
+                            token.col[0] +
+                            (startsWithNL(vs) ? '' : ' ') +
+                            vs +
+                            (setsep ? separator : ''),
                         )
                         if (comments && c[1])
                             partial.push(makeComment(c[1], ca ? ' ' : '\n', ca))
@@ -397,10 +373,10 @@ export default function stringify(data, opt) {
                                     multiline = saveMultiline
                                     cpartial.push(
                                         quoteKey(k) +
-                                            token.col[0] +
-                                            ' ' +
-                                            vs +
-                                            (setsep ? token.com[0] : ''),
+                                        token.col[0] +
+                                        ' ' +
+                                        vs +
+                                        (setsep ? token.com[0] : ''),
                                     )
                                     break
                                 case 'object':
