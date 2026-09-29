@@ -465,11 +465,13 @@ export default function stringify(data, opt) {
         if (res[res.length - 1] === '\n') res = res.slice(0, -1)
     }
 
-    if (emitRootBraces && comments && comments[0]) {
-        res = comments[0] + eol + res
+    if (comments && comments[0]) {
+        res = comments[0].replace(/\s+$/, '') + eol + res
     }
 
-    if (comments) res += comments[1] || ''
+    if (comments && comments[1]) {
+        res += comments[1].replace(/\s+$/, '')
+    }
 
     if (!res.endsWith(eol)) res += eol
 

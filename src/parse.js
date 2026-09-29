@@ -234,10 +234,16 @@ export default function parse(source, opt) {
             if (res[i] > ' ') {
                 var j = res.indexOf('\n')
                 if (j >= 0) {
-                    var c = [res.substr(0, j), res.substr(j + 1)]
+                    // отрезаем trailing whitespace у ОБЕИХ частей
+                    var c = [
+                        res.substr(0, j).replace(/\s+$/, ''),
+                        res.substr(j + 1).replace(/\s+$/, '')
+                    ]
                     if (first && c[0].trim().length === 0) c.shift()
                     return c
-                } else return [res]
+                } else {
+                    return [res.replace(/\s+$/, '')]
+                }
             }
         }
         return []
@@ -336,14 +342,20 @@ export default function parse(source, opt) {
                 // assuming ch === '{'
                 next()
                 cAt = at
-            } else cAt = 1
+                white()
+                if (comments) nextComment = readCommentAt(cAt, true).join('\n')
+            } else {
+                // root-level object without braces:
+                // ведущий комментарий уже сохранён rootValue() как root-комментарий,
+                // повторно его к первому ключу привязывать не надо
+                white()
+                cAt = at
+            }
 
-            white()
-            if (comments) nextComment = readCommentAt(cAt, true).join('\n')
             if (ch === '}' && !withoutBraces) {
                 if (comments) comments.e = [nextComment]
                 next()
-                return object;  // empty object
+                return object
             }
             while (ch) {
                 key = keyname()
