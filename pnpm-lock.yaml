@@ -17,12 +17,15 @@ importers:
       '@vitejs/plugin-vue':
         specifier: ^6.0.9
         version: 6.0.9(vite@8.3.1(@types/node@26.6.3))(vue@3.5.43(typescript@6.0.3))
+      '@vue/language-core':
+        specifier: ^3.3.11
+        version: 3.3.11
       vite:
         specifier: ^8.3.1
         version: 8.3.1(@types/node@26.6.3)
       vite-plugin-dts:
         specifier: ^5.1.1
-        version: 5.1.1(rolldown@1.2.11)(typescript@6.0.3)(vite@8.3.1(@types/node@26.6.3))
+        version: 5.1.1(@vue/language-core@3.3.11)(rolldown@1.2.11)(typescript@6.0.3)(vite@8.3.1(@types/node@26.6.3))
       vitest:
         specifier: ^5.0.2
         version: 5.0.2(@types/node@26.6.3)(vite@8.3.1(@types/node@26.6.3))
@@ -239,6 +242,9 @@ packages:
   '@vue/compiler-ssr@3.5.43':
     resolution: {integrity: sha512-GF62orf7KiJX9RqrHNGrYBudsQGD0OhJ5nDs90O8UiDuS40+YMYomiXu6w6EuvtXuRDc3MSNis3EaaSKAVSWpg==}
 
+  '@vue/language-core@3.3.11':
+    resolution: {integrity: sha512-QJmpliwAVpC/OxubIByPAhNzsQPRc8/gxlN2qnVzVfIMjMDz/9RnXRFoetjz5yEgXVXyp4LqhXq3V53PjmNzFw==}
+
   '@vue/reactivity@3.5.43':
     resolution: {integrity: sha512-G/c9GyOZNI2jVaaS6OX1EF1SSFSv7H0ERqNTl4+DTFMlZmB5eVAB53aLQNam/7NL2NPtaDD7RdVrzf8uJzMuOA==}
 
@@ -258,6 +264,9 @@ packages:
     resolution: {integrity: sha512-lGq+9yr1/GuAWaVYIHRjvvySG5/4VfKIvC8EWxStPdcDh/Ka7FG3twP6v4d5BkravUilhIAsG4Qj83t02LWUPQ==}
     engines: {node: '>=0.4.0'}
     hasBin: true
+
+  alien-signals@3.2.1:
+    resolution: {integrity: sha512-I8FjmltrfnDFoZedi5CG8DghVYNhzb/Ijluz7tCSJH0xpd0484Kowhbb1XDYOxfJpU1p5wnM2X54dA+IfGyD1g==}
 
   assertion-error@2.0.1:
     resolution: {integrity: sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA==}
@@ -421,6 +430,9 @@ packages:
 
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
+
+  muggle-string@0.4.1:
+    resolution: {integrity: sha512-VNTrAak/KhO2i8dqqnqnAHOa3cYBwXEZe9h+D5h/1ZqFSTEFHdM65lR7RoIqq3tBBYavsOXV84NoHXZ0AkPyqQ==}
 
   nanoid@3.3.19:
     resolution: {integrity: sha512-Y2tUNy4ouw6tq5oDSKeQYGOyhkUBhNOcGV/02KC+6kd9eDGqdZd++mjMiIDilrBYvjEnCYvVtsuHCuP+okSfug==}
@@ -810,6 +822,16 @@ snapshots:
       '@vue/compiler-dom': 3.5.43
       '@vue/shared': 3.5.43
 
+  '@vue/language-core@3.3.11':
+    dependencies:
+      '@volar/language-core': 2.4.28
+      '@vue/compiler-dom': 3.5.43
+      '@vue/shared': 3.5.43
+      alien-signals: 3.2.1
+      muggle-string: 0.4.1
+      path-browserify: 1.0.1
+      picomatch: 4.0.7
+
   '@vue/reactivity@3.5.43':
     dependencies:
       '@vue/shared': 3.5.43
@@ -835,6 +857,8 @@ snapshots:
   '@vue/shared@3.5.43': {}
 
   acorn@8.18.0: {}
+
+  alien-signals@3.2.1: {}
 
   assertion-error@2.0.1: {}
 
@@ -951,6 +975,8 @@ snapshots:
 
   ms@2.1.3: {}
 
+  muggle-string@0.4.1: {}
+
   nanoid@3.3.19: {}
 
   obug@2.2.1: {}
@@ -1023,7 +1049,7 @@ snapshots:
 
   undici-types@8.9.0: {}
 
-  unplugin-dts@1.1.1(rolldown@1.2.11)(typescript@6.0.3)(vite@8.3.1(@types/node@26.6.3)):
+  unplugin-dts@1.1.1(@vue/language-core@3.3.11)(rolldown@1.2.11)(typescript@6.0.3)(vite@8.3.1(@types/node@26.6.3)):
     dependencies:
       '@rollup/pluginutils': 5.4.0
       '@volar/typescript': 2.4.28(typescript@6.0.3)
@@ -1036,6 +1062,7 @@ snapshots:
       typescript: 6.0.3
       unplugin: 2.3.11
     optionalDependencies:
+      '@vue/language-core': 3.3.11
       rolldown: 1.2.11
       vite: 8.3.1(@types/node@26.6.3)
     transitivePeerDependencies:
@@ -1048,9 +1075,9 @@ snapshots:
       picomatch: 4.0.7
       webpack-virtual-modules: 0.6.2
 
-  vite-plugin-dts@5.1.1(rolldown@1.2.11)(typescript@6.0.3)(vite@8.3.1(@types/node@26.6.3)):
+  vite-plugin-dts@5.1.1(@vue/language-core@3.3.11)(rolldown@1.2.11)(typescript@6.0.3)(vite@8.3.1(@types/node@26.6.3)):
     dependencies:
-      unplugin-dts: 1.1.1(rolldown@1.2.11)(typescript@6.0.3)(vite@8.3.1(@types/node@26.6.3))
+      unplugin-dts: 1.1.1(@vue/language-core@3.3.11)(rolldown@1.2.11)(typescript@6.0.3)(vite@8.3.1(@types/node@26.6.3))
     optionalDependencies:
       vite: 8.3.1(@types/node@26.6.3)
     transitivePeerDependencies:
