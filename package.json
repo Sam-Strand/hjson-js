@@ -1,39 +1,39 @@
 {
-    "name": "hjson",
-    "version": "4.2.2",
-    "scripts": {
-        "dev": "vite",
-        "build": "vite build",
-        "prepare": "vite build",
-        "test": "vitest run"
+  "name": "hjson",
+  "version": "4.2.2",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "prepare": "vite build",
+    "test": "vitest run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sam-Strand/hjson-js.git"
+  },
+  "author": "Саадовский М.К.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "development": "./src/index.js",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/Sam-Strand/hjson-js.git"
-    },
-    "author": "Саадовский М.К.",
-    "type": "module",
-    "exports": {
-        ".": {
-            "development": "./src/index.js",
-            "import": "./dist/index.js",
-            "types": "./dist/index.d.ts"
-        },
-        "./vite-plugin-hjson": {
-            "development": "./src/vite-plugin-hjson.js",
-            "import": "./dist/vite-plugin-hjson.js",
-            "types": "./dist/vite-plugin-hjson.d.ts"
-        }
-    },
-    "license": "MIT",
-    "devDependencies": {
-        "@types/node": "^26.6.3",
-        "@typescript/typescript6": "^6.0.2",
-        "@vitejs/plugin-vue": "^6.0.9",
-        "@vue/language-core": "^3.3.11",
-        "vite": "^8.3.1",
-        "vite-plugin-dts": "^5.1.1",
-        "vitest": "^5.0.2",
-        "vue": "^3.5.43"
+    "./vite-plugin-hjson": {
+      "development": "./src/vite-plugin-hjson.js",
+      "import": "./dist/vite-plugin-hjson.js",
+      "types": "./dist/vite-plugin-hjson.d.ts"
     }
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@typescript/typescript6": "^6.0.2",
+    "@vitejs/plugin-vue": "^6.0.10",
+    "@vue/language-core": "^3.3.13",
+    "vite": "^8.3.4",
+    "vite-plugin-dts": "^5.1.2",
+    "vitest": "^5.0.4",
+    "vue": "^3.5.44"
+  }
 }
