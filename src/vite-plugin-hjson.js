@@ -35,29 +35,25 @@ function pickPaths(value, pick, ctx, file) {
 }
 
 /**
- * Удаляет указанные пути из объекта (не мутируя оригинал).
+ * Удаляет указанные пути из объекта
  *
  * @param {any} value - Исходное значение.
  * @param {string} omit - Строка с путями через запятую, например: "a.b, c.d".
- * @param {object} ctx - Контекст Vite (не используется, оставлен для единообразия).
- * @param {string} file - Путь к файлу (не используется, оставлен для единообразия).
  * @returns {any} Глубокая копия значения без указанных путей.
  */
-function omitPaths(value, omit, ctx, file) {
+function omitPaths(value, omit) {
     const paths = omit.split(',').map(s => s.trim()).filter(Boolean)
-    // Глубокая копия через JSON — дёшево и достаточно для данных из HJSON.
-    const cloned = JSON.parse(JSON.stringify(value))
 
     for (const path of paths) {
         const parts = path.split('.')
-        const last = parts.pop()                 // последний ключ, который удаляем
-        const target = parts.reduce(          // доходим до родителя
+        const last = parts.pop()
+        const target = parts.reduce(
             (o, k) => (o == null ? undefined : o[k]),
-            cloned,
+            value,
         )
         if (target && typeof target === 'object') delete target[last]
     }
-    return cloned
+    return value
 }
 
 /**
@@ -121,7 +117,7 @@ export default function hjson(options = {}) {
 
             // 3) omit (если указан) — удалить указанные пути
             if (omit) {
-                value = omitPaths(value, omit, this, file)
+                value = omitPaths(value, omit)
             }
 
             return {

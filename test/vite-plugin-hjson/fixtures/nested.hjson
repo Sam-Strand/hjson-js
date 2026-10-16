@@ -1,0 +1,9 @@
+{
+  a: {
+    b: {
+      c: deep
+      d: also-deep
+    }
+  }
+  e: top
+}
