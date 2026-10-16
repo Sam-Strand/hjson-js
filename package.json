@@ -20,7 +20,6 @@
       "types": "./dist/index.d.ts"
     },
     "./vite-plugin-hjson": {
-      "development": "./src/vite-plugin-hjson.js",
       "import": "./dist/vite-plugin-hjson.js",
       "types": "./dist/vite-plugin-hjson.d.ts"
     }
