@@ -2,7 +2,7 @@
   "name": "hjson",
   "version": "4.2.3",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "prepare": "vite build",
     "test": "vitest run"
