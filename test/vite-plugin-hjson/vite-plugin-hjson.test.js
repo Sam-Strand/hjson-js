@@ -1,13 +1,17 @@
 import { test, describe, expect } from 'vitest'
+import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import hjson from '../../src/vite-plugin-hjson.js'
+import { typeOf, declarationFor, declarationPath } from '../../src/hjson-types.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const FIXTURES = path.join(__dirname, 'fixtures')
 
 function runRaw(file, { options = {}, query = '' } = {}) {
-    const plugin = hjson(options)
+    // объявления проверяются отдельно, в фикстуры их не пишем
+    const plugin = hjson({ dts: false, ...options })
     const abs = path.join(FIXTURES, file)
     const id = query ? `${abs}?${query}` : abs
 
@@ -200,11 +204,87 @@ describe('vite-plugin-hjson', () => {
         })
 
         test('map === null', () => {
-            const p = hjson()
+            const p = hjson({ dts: false })
             const ctx = { error: () => {} }
             const id = path.join(FIXTURES, 'basic.hjson')
             const res = p.transform.call(ctx, '', id)
             expect(res.map).toBeNull()
+        })
+    })
+
+    describe('типы (dts)', () => {
+        test('выводит примитивы, массивы и вложенные объекты', () => {
+            expect(typeOf({ a: 1, b: 'x', c: true, d: null, e: [] })).toBe(
+                '{\n    a: number\n    b: string\n    c: boolean\n    d: null\n    e: unknown[]\n}'
+            )
+        })
+
+        test('сливает объекты в массиве, отсутствующие ключи — необязательные', () => {
+            expect(typeOf([{ id: 1, name: 'a' }, { id: 2 }])).toBe('{\n    id: number\n    name?: string\n}[]')
+        })
+
+        test('объединяет разные типы элементов', () => {
+            expect(typeOf([1, 'a', 2])).toBe('(number | string)[]')
+        })
+
+        test('кавычит ключи, которые не являются идентификаторами', () => {
+            expect(typeOf({ 'a-b': 1, '1x': 2 })).toBe('{\n    "a-b": number\n    "1x": number\n}')
+        })
+
+        test('путь объявления', () => {
+            expect(declarationPath('/x/config.hjson')).toBe('/x/config.d.hjson.ts')
+        })
+
+        test('declarationFor экспортирует default', () => {
+            expect(declarationFor({ a: 1 }, 'a.hjson')).toMatch(/declare const value: \{\n {4}a: number\n\}\nexport default value\n$/)
+        })
+
+        function tempProject() {
+            const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hjson-dts-'))
+            fs.mkdirSync(path.join(root, 'src'))
+            fs.mkdirSync(path.join(root, 'node_modules'))
+            fs.writeFileSync(path.join(root, 'src', 'user.hjson'), fs.readFileSync(path.join(FIXTURES, 'user.hjson')))
+            fs.writeFileSync(path.join(root, 'node_modules', 'skip.hjson'), '{a: 1}')
+            return root
+        }
+
+        test('buildStart пишет объявления для всех .hjson, кроме node_modules', () => {
+            const root = tempProject()
+            const p = hjson()
+            p.configResolved({ root, build: { outDir: 'dist' } })
+            p.buildStart.call({ error: (m) => { throw new Error(m) } })
+            const dts = fs.readFileSync(path.join(root, 'src', 'user.d.hjson.ts'), 'utf8')
+            expect(dts).toContain('password: string')
+            expect(dts).toContain('profile: {')
+            expect(fs.existsSync(path.join(root, 'node_modules', 'skip.d.hjson.ts'))).toBe(false)
+        })
+
+        test('учитывает default handler', () => {
+            const root = tempProject()
+            const p = hjson({ default: 'public', handlers: { public: ({ password, ...rest }) => rest } })
+            p.configResolved({ root, build: { outDir: 'dist' } })
+            p.buildStart.call({ error: (m) => { throw new Error(m) } })
+            expect(fs.readFileSync(path.join(root, 'src', 'user.d.hjson.ts'), 'utf8')).not.toContain('password')
+        })
+
+        test('transform без query обновляет объявление, с query — нет', () => {
+            const root = tempProject()
+            const file = path.join(root, 'src', 'user.hjson')
+            const p = hjson()
+            const ctx = { error: (m) => { throw new Error(m) } }
+            p.transform.call(ctx, '', file + '?pick=name')
+            expect(fs.existsSync(declarationPath(file))).toBe(false)
+            p.transform.call(ctx, '', file)
+            expect(fs.existsSync(declarationPath(file))).toBe(true)
+        })
+
+        test('dts: false ничего не пишет', () => {
+            const root = tempProject()
+            const p = hjson({ dts: false })
+            p.configResolved({ root, build: { outDir: 'dist' } })
+            p.buildStart.call({ error: () => {} })
+            p.transform.call({ error: () => {} }, '', path.join(root, 'src', 'user.hjson'))
+            expect(fs.existsSync(path.join(root, 'src', 'user.d.hjson.ts'))).toBe(false)
         })
     })
 })

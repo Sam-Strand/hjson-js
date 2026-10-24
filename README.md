@@ -130,6 +130,32 @@ import combined from './file.hjson?as=config&pick=a.b,c&omit=d'
 |-------|-----|--------------|----------|
 | `handlers` | `Record<string, Function>` | `{}` | Именованные обработчики значения до применения `pick`/`omit`. Сигнатура: `(value, params, { file, ctx }) => any`. |
 | `default` | `string \| null` | `null` | Имя handler'а по умолчанию, если в import не указан `?as=...`. |
+| `dts` | `boolean` | `true` | Генерировать типы для импортов `.hjson` (см. ниже). |
+
+### Типы для TypeScript
+
+Рядом с каждым `file.hjson` плагин пишет `file.d.hjson.ts` с типом значения, которое даёт импорт **без query** (с учётом `default`-handler'а):
+
+```ts
+// config.d.hjson.ts — сгенерировано
+declare const value: {
+    server: {
+        host: string
+        port: number
+    }
+}
+export default value
+```
+
+Чтобы TypeScript находил такие файлы, в `tsconfig.json` нужно включить:
+
+```json
+{ "compilerOptions": { "allowArbitraryExtensions": true } }
+```
+
+Объявления обновляются при старте сборки и dev-сервера (сканируется корень проекта, кроме `node_modules`, `.git` и `outDir`), при каждом импорте и при изменении `.hjson` в dev-режиме. Типы расширяются как у JSON-импортов: `'a'` → `string`. Объекты в массивах сливаются, ключи, которые есть не у всех элементов, становятся необязательными.
+
+Импорты с query (`?pick=`, `?as=`, `?omit=`) так не типизируются: TypeScript не умеет сопоставить модулю с query отдельный файл объявления. Для них по-прежнему нужно `declare module '*.hjson?*'` или явное приведение типа.
 
 ### Обработка ошибок
 

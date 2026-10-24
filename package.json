@@ -15,13 +15,13 @@
   "type": "module",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "development": "./src/index.js",
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./dist/index.js"
     },
     "./vite-plugin-hjson": {
-      "import": "./dist/vite-plugin-hjson.js",
-      "types": "./dist/vite-plugin-hjson.d.ts"
+      "types": "./dist/vite-plugin-hjson.d.ts",
+      "import": "./dist/vite-plugin-hjson.js"
     }
   },
   "license": "MIT",
