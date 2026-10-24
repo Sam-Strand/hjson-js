@@ -241,37 +241,32 @@ describe('vite-plugin-hjson', () => {
 
         function tempProject() {
             const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hjson-dts-'))
-            fs.mkdirSync(path.join(root, 'src'))
-            fs.mkdirSync(path.join(root, 'node_modules'))
-            fs.writeFileSync(path.join(root, 'src', 'user.hjson'), fs.readFileSync(path.join(FIXTURES, 'user.hjson')))
-            fs.writeFileSync(path.join(root, 'node_modules', 'skip.hjson'), '{a: 1}')
+            fs.writeFileSync(path.join(root, 'user.hjson'), fs.readFileSync(path.join(FIXTURES, 'user.hjson')))
+            fs.writeFileSync(path.join(root, 'broken.hjson'), '{ a: "\\uxxxx" }')
             return root
         }
+        const ctx = { error: (m) => { throw new Error(m) } }
 
-        test('buildStart пишет объявления для всех .hjson, кроме node_modules', () => {
+        test('объявление пишется при импорте и учитывает default handler', () => {
             const root = tempProject()
-            const p = hjson()
-            p.configResolved({ root, build: { outDir: 'dist' } })
-            p.buildStart.call({ error: (m) => { throw new Error(m) } })
-            const dts = fs.readFileSync(path.join(root, 'src', 'user.d.hjson.ts'), 'utf8')
-            expect(dts).toContain('password: string')
+            const file = path.join(root, 'user.hjson')
+            const p = hjson({ default: 'public', handlers: { public: ({ password, ...rest }) => rest } })
+            p.transform.call(ctx, '', file)
+            const dts = fs.readFileSync(declarationPath(file), 'utf8')
             expect(dts).toContain('profile: {')
-            expect(fs.existsSync(path.join(root, 'node_modules', 'skip.d.hjson.ts'))).toBe(false)
+            expect(dts).not.toContain('password')
         })
 
-        test('учитывает default handler', () => {
+        test('неимпортированные .hjson не трогаются (в том числе битые)', () => {
             const root = tempProject()
-            const p = hjson({ default: 'public', handlers: { public: ({ password, ...rest }) => rest } })
-            p.configResolved({ root, build: { outDir: 'dist' } })
-            p.buildStart.call({ error: (m) => { throw new Error(m) } })
-            expect(fs.readFileSync(path.join(root, 'src', 'user.d.hjson.ts'), 'utf8')).not.toContain('password')
+            hjson().transform.call(ctx, '', path.join(root, 'user.hjson'))
+            expect(fs.existsSync(path.join(root, 'broken.d.hjson.ts'))).toBe(false)
         })
 
         test('transform без query обновляет объявление, с query — нет', () => {
             const root = tempProject()
-            const file = path.join(root, 'src', 'user.hjson')
+            const file = path.join(root, 'user.hjson')
             const p = hjson()
-            const ctx = { error: (m) => { throw new Error(m) } }
             p.transform.call(ctx, '', file + '?pick=name')
             expect(fs.existsSync(declarationPath(file))).toBe(false)
             p.transform.call(ctx, '', file)
@@ -280,11 +275,8 @@ describe('vite-plugin-hjson', () => {
 
         test('dts: false ничего не пишет', () => {
             const root = tempProject()
-            const p = hjson({ dts: false })
-            p.configResolved({ root, build: { outDir: 'dist' } })
-            p.buildStart.call({ error: () => {} })
-            p.transform.call({ error: () => {} }, '', path.join(root, 'src', 'user.hjson'))
-            expect(fs.existsSync(path.join(root, 'src', 'user.d.hjson.ts'))).toBe(false)
+            hjson({ dts: false }).transform.call(ctx, '', path.join(root, 'user.hjson'))
+            expect(fs.existsSync(path.join(root, 'user.d.hjson.ts'))).toBe(false)
         })
     })
 })

@@ -3,8 +3,6 @@ import path from 'node:path'
 import parse from './parse.js'
 import { declarationFor, declarationPath } from './hjson-types.js'
 
-/** Каталоги, которые не сканируются в поисках .hjson. */
-const SKIP_DIRS = new Set(['node_modules', '.git'])
 
 /**
  * Выбирает значения по списку путей из объекта.
@@ -62,27 +60,6 @@ function omitPaths(value, omit) {
 }
 
 /**
- * Все .hjson-файлы в каталоге (рекурсивно), кроме node_modules, .git и `skip`.
- *
- * @param {string} dir
- * @param {Set<string>} skip - абсолютные пути каталогов, которые надо пропустить
- * @returns {string[]}
- */
-function findHjsonFiles(dir, skip) {
-    /** @type {string[]} */
-    const out = []
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-        const full = path.join(dir, entry.name)
-        if (entry.isDirectory()) {
-            if (!SKIP_DIRS.has(entry.name) && !skip.has(full)) out.push(...findHjsonFiles(full, skip))
-        } else if (entry.isFile() && entry.name.endsWith('.hjson')) {
-            out.push(full)
-        }
-    }
-    return out
-}
-
-/**
  * Записывает файл, только если содержимое изменилось
  * (чтобы не будить watcher'ы и не трогать mtime зря).
  *
@@ -114,18 +91,17 @@ function writeIfChanged(file, content) {
  * @param {string|null} [options.default]
  *        Имя handler'а по умолчанию, если в import не указан `?as=...`.
  * @param {boolean} [options.dts=true]
- *        Генерировать рядом с каждым `file.hjson` объявление `file.d.hjson.ts`
- *        с типом значения (для импорта без query). В tsconfig нужен
+ *        Генерировать рядом с каждым импортируемым (без query) `file.hjson`
+ *        объявление `file.d.hjson.ts` с типом значения. В tsconfig нужен
  *        `"allowArbitraryExtensions": true`.
  */
 export default function hjson(options = {}) {
     const handlers = options.handlers ?? {}
     const defaultHandler = options.default ?? null
     const dts = options.dts ?? true
-    /** @type {string} */
-    let root = process.cwd()
+    /** .hjson-файлы, которые импортируются без query (для них пишутся объявления). */
     /** @type {Set<string>} */
-    let skipDirs = new Set()
+    const imported = new Set()
 
     /**
      * Читает файл и применяет handler / pick / omit из query.
@@ -187,28 +163,13 @@ export default function hjson(options = {}) {
         // 'pre' — обрабатываем .hjson раньше других плагинов Vite.
         enforce: 'pre',
 
-        /** @param {{ root: string, build: { outDir: string } }} config */
-        configResolved(config) {
-            root = config.root
-            skipDirs = new Set([path.resolve(root, config.build.outDir)])
-        },
-
-        /**
-         * Объявления нужны TypeScript до того, как Vite дойдёт до импорта
-         * (проверка типов, IDE), поэтому генерируем их для всех .hjson сразу.
-         */
-        buildStart() {
-            if (!dts) return
-            for (const file of findHjsonFiles(root, skipDirs)) writeDeclaration(this, file)
-        },
-
         /** В dev-режиме обновляем объявление при изменении .hjson. */
         configureServer(server) {
             if (!dts) return
             const ctx = { error: (/** @type {string} */ msg) => server.config.logger.error(msg) }
             /** @param {string} file */
             const update = (file) => {
-                if (!file.endsWith('.hjson')) return
+                if (!imported.has(file)) return
                 try {
                     writeDeclaration(ctx, file)
                 } catch (e) {
@@ -218,7 +179,8 @@ export default function hjson(options = {}) {
             server.watcher.on('add', update)
             server.watcher.on('change', update)
             server.watcher.on('unlink', (/** @type {string} */ file) => {
-                if (file.endsWith('.hjson')) fs.rmSync(declarationPath(file), { force: true })
+                if (!imported.delete(file)) return
+                fs.rmSync(declarationPath(file), { force: true })
             })
         },
 
@@ -235,7 +197,10 @@ export default function hjson(options = {}) {
             if (!loaded) return null
 
             // импорт без query — тот, для которого пишется объявление
-            if (!query) writeDeclaration(this, file, loaded.value)
+            if (!query) {
+                imported.add(file)
+                writeDeclaration(this, file, loaded.value)
+            }
 
             return {
                 code: `export default ${JSON.stringify(loaded.value)};`,
