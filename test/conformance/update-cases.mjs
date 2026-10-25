@@ -36,5 +36,8 @@ for (const c of cases) {
     }
 }
 
-fs.writeFileSync(file, JSON.stringify(cases, null, 2) + '\n')
+// невидимые символы и U+2028/U+2029 пишем как \uXXXX: иначе редакторы ругаются на «необычные концы строк»
+const INVISIBLE = /[\u007f-\u00a0\u00ad\u061c\u1680\u180e\u2000-\u200f\u2028-\u202f\u205f-\u206f\u3000\ufeff]/g
+const json = JSON.stringify(cases, null, 2).replace(INVISIBLE, (c) => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'))
+fs.writeFileSync(file, json + '\n')
 console.log(`updated ${cases.length} cases`)
