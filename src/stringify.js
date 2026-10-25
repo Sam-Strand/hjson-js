@@ -93,9 +93,10 @@ export default function stringify(data, opt) {
         '^\\s|^"|^\'|^\\/\\*|^\\/\\/|^\\{|^\\}|^\\[|^\\]|^:|^,|\\s$|[\x00-\x1f' + commonRange + ']',
         'g',
     )
+    // \r is excluded on purpose: the reader drops \r inside ''' (CRLF files)
     const needsEscapeML = new RegExp(
         '\'\'\'|^[\\s]+$|[\x00-' + (multiline === 2 ? '\x09' : '\x08') +
-        '\x0b\x0c\x0e-\x1f' + commonRange + ']',
+        '\x0b-\x1f' + commonRange + ']',
         'g',
     )
     const startsWithKeyword = new RegExp('^(true|false|null|NaN|[+-]?Infinity)\\s*((,|\\]|\\}|//|/\\*).*)?$')
@@ -198,7 +199,8 @@ export default function stringify(data, opt) {
             breaksQuoteless(string) ||
             tryParseNumber(string, true) !== undefined ||
             startsWithKeyword.test(string) ||
-            looksLikeIsoDate(string)
+            looksLikeIsoDate(string) ||
+            (isRootObject && string.indexOf(':') >= 0)
         ) {
             needsEscape.lastIndex = 0
             needsEscapeML.lastIndex = 0
@@ -214,10 +216,15 @@ export default function stringify(data, opt) {
         const a = string.replace(/\r/g, '').split('\n')
         if (!shallow) currentGap += indent
 
-        if (a.length === 1 && a[0][0] !== "'" && a[0][a[0].length - 1] !== "'") {
+        // one-line '''x''' form: the reader skips whitespace right after ''',
+        // so a value starting with whitespace needs the block form
+        if (a.length === 1 && a[0][0] !== "'" && a[0][a[0].length - 1] !== "'" && !(a[0][0] <= ' ')) {
             return wrap(token.mstr, a[0])
         }
-        let res = (sameLine ? '' : eol + currentGap) + token.mstr[0]
+        // The reader takes the block indent from the column of the opening '''.
+        // For an object value (not shallow) that column must equal currentGap,
+        // so ''' always goes on its own line, even with bracesSameLine.
+        let res = (sameLine && shallow ? '' : eol + currentGap) + token.mstr[0]
         for (let i = 0; i < a.length; i++) {
             res += eol
             if (a[i]) res += currentGap + a[i]
@@ -406,7 +413,10 @@ export default function stringify(data, opt) {
         const { partial, cpartial } = ctx
 
         // порядок ключей: сначала несущие комментарии, затем остальные
-        const commentKeys = comments ? comments.o.slice() : []
+        // (keys deleted from the object after parsing are skipped)
+        const commentKeys = comments
+            ? comments.o.filter((k) => Object.prototype.hasOwnProperty.call(value, k))
+            : []
         const objectKeys = []
         for (const k in value) {
             if (Object.prototype.hasOwnProperty.call(value, k) && commentKeys.indexOf(k) < 0) {
@@ -501,7 +511,7 @@ export default function stringify(data, opt) {
     // Root assembly
     // ==================================================================
 
-    const dataComments = keepComments ? getComment(data) : null
+    const dataComments = keepComments && data !== null && typeof data === 'object' ? getComment(data) : null
     const rootComments = dataComments && dataComments.r
     let res = str(data, null, true, true)
 

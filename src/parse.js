@@ -1,5 +1,23 @@
 import { createComment, getComment, tryParseNumber, parseSpecialNumber, parseIsoDate } from './common.js'
 
+// Fast paths: runs of "ordinary" characters are consumed with sticky regexes.
+// Every decision of the parser is still taken on the same characters, in the same order.
+// whitespace (everything <= ' ') and comments // ... and /* ... */ (unterminated: up to the end)
+const WHITE_RE = /(?:[\x00-\x20]+|\/\/[^\n]*|\/\*[\s\S]*?(?:\*\/|$))*/y
+// ordinary characters of a quoteless value: anything but EOL, separators, brackets and '/'
+const TFNNS_PLAIN_RE = /[^\r\n,{}\[\]\/]+/y
+// ordinary characters of a quoted string
+const STRING_PLAIN_RE = { '"': /[^"\\\n\r]+/y, "'": /[^'\\\n\r]+/y }
+// ordinary characters of a quoteless key
+const KEY_PLAIN_RE = /[^\x00-\x20{}\[\],:]+/y
+// ordinary characters inside a ''' string
+const ML_PLAIN_RE = /[^'\n\r]+/y
+
+function runAt(re, text, pos) {
+    re.lastIndex = pos
+    return re.exec(text)
+}
+
 export default function parse(source, opt) {
     var text
     var at;   // The index of the current character
@@ -47,6 +65,12 @@ export default function parse(source, opt) {
         return text.charAt(at + offs)
     }
 
+    // move to the character at `pos` (same as calling next() until we get there)
+    function jump(pos) {
+        at = pos
+        next()
+    }
+
     function string(allowML) {
         // Parse a string value.
         // callers make sure that (ch === '"' || ch === "'")
@@ -54,7 +78,11 @@ export default function parse(source, opt) {
 
         // When parsing for string values, we must look for "/' and \ characters.
         var exitCh = ch
-        while (next()) {
+        var plain = STRING_PLAIN_RE[exitCh]
+        for (; ;) {
+            var m = runAt(plain, text, at)
+            if (m) { string += m[0]; at = plain.lastIndex }
+            if (!next()) break
             if (ch === exitCh) {
                 next()
                 if (allowML && exitCh === "'" && ch === "'" && string.length === 0) {
@@ -131,9 +159,13 @@ export default function parse(source, opt) {
                 string += '\n'
                 next()
                 skipIndent()
-            } else {
-                if (ch !== '\r') string += ch
+            } else if (ch === '\r') {
                 next()
+            } else {
+                // ordinary characters up to a quote / end of line, in one go
+                var m = runAt(ML_PLAIN_RE, text, at - 1)
+                string += m[0]
+                jump(ML_PLAIN_RE.lastIndex)
             }
         }
     }
@@ -156,25 +188,24 @@ export default function parse(source, opt) {
             } else if (isPunctuatorChar(ch)) {
                 error("Found '" + ch + "' where a key name was expected (check your syntax or use quotes if the key name includes {}[],: or whitespace)")
             } else {
-                name += ch
+                runAt(KEY_PLAIN_RE, text, at - 1)
+                name += text.slice(at - 1, KEY_PLAIN_RE.lastIndex)
+                jump(KEY_PLAIN_RE.lastIndex)
+                continue
             }
             next()
         }
     }
 
     function white() {
-        while (ch) {
-            // Skip whitespace.
-            while (ch && ch <= ' ') next()
-            // mkon allows JS-style comments only: // and /* */
-            if (ch === '/' && peek(0) === '/') {
-                while (ch && ch !== '\n') next()
-            } else if (ch === '/' && peek(0) === '*') {
-                next(); next()
-                while (ch && !(ch === '*' && peek(0) === '/')) next()
-                if (ch) { next(); next(); }
-            } else break
+        // skip whitespace and comments (mkon allows JS-style comments only: // and /* */)
+        if (!ch || (ch > ' ' && ch !== '/')) return  // common case: already on a meaningful character
+        if (at === 0) {  // initial state: a virtual space before the text
+            next()
+            if (!ch) return
         }
+        runAt(WHITE_RE, text, at - 1)
+        jump(WHITE_RE.lastIndex)
     }
 
     function tfnns(inContainer) {
@@ -187,13 +218,15 @@ export default function parse(source, opt) {
         //   { a: x, b: [p, q] }   -> a = "x", b = ["p", "q"]
         //   { f: \frac{a,b}{c} }  -> f = "\frac{a,b}{c}"
         // A bare root value (no container) still runs to the end of the line.
-        var value = ch
         if (isPunctuatorChar(ch))
             error("Found a punctuator character '" + ch + "' when expecting a quoteless string (check your syntax)")
 
+        var start = at - 1
+        var value
         var depth = 0 // brackets opened inside this quoteless string
 
         for (; ;) {
+            if (runAt(TFNNS_PLAIN_RE, text, at)) at = TFNNS_PLAIN_RE.lastIndex
             next()
             // (detection of ml strings was moved to string())
             var isEol = ch === '\r' || ch === '\n' || ch === ''
@@ -206,6 +239,7 @@ export default function parse(source, opt) {
                 // this tests for the case of {true|false|null|num|NaN|±Infinity|ISO date}
                 // followed by { ',' | '}' | ']' | '//' | '/*' }
                 // which needs to be parsed as the specified value
+                value = text.slice(start, at - 1)
                 var chf = value[0]
                 switch (chf) {
                     case 'f': if (value.trim() === "false") return false; break
@@ -239,7 +273,6 @@ export default function parse(source, opt) {
             }
             if (ch === '{' || ch === '[') depth++
             else if ((ch === '}' || ch === ']') && depth > 0) depth--
-            value += ch
         }
     }
 
@@ -394,9 +427,10 @@ export default function parse(source, opt) {
                 if (ch === ',') { next(); cAt = at; white(); }
                 if (comments) {
                     var c = readCommentAt(cAt)
+                    // a duplicate key keeps its first position, like the value does
+                    if (!Object.prototype.hasOwnProperty.call(comments.c, key)) comments.o.push(key)
                     comments.c[key] = [nextComment || "", c[0] || ""]
                     nextComment = c[1]
-                    comments.o.push(key)
                 }
                 if (ch === '}' && !withoutBraces) {
                     next()
@@ -433,7 +467,9 @@ export default function parse(source, opt) {
         if (ch) error("Syntax error, found trailing characters")
         if (keepComments) {
             var b = c.join('\n'), a = readCommentAt(cAt).join('\n')
-            if (a || b) {
+            // comments can only be attached to objects (containers and Date);
+            // around a primitive root they are dropped
+            if ((a || b) && v !== null && typeof v === 'object') {
                 var comments = createComment(v, getComment(v))
                 comments.r = [b, a]
             }

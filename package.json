@@ -1,15 +1,16 @@
 {
   "name": "mkon",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "prepare": "vite build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "conformance:update": "node test/conformance/update-cases.mjs"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Sam-Strand/mkon.git"
+    "url": "git+https://github.com/Sam-Strand/mkon-js.git"
   },
   "author": "Саадовский М.К.",
   "type": "module",

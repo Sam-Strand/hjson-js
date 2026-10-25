@@ -1,0 +1,1147 @@
+[
+  {
+    "name": "inline object",
+    "mkon": "{ html: ⊄, latex: \\not\\subset, aliases: [notsub, notsubset] }",
+    "value": {
+      "html": "⊄",
+      "latex": "\\not\\subset",
+      "aliases": [
+        "notsub",
+        "notsubset"
+      ]
+    },
+    "text": "{\n  html: ⊄\n  latex: \\not\\subset\n  aliases:\n  [\n    notsub\n    notsubset\n  ]\n}\n"
+  },
+  {
+    "name": "several values per line",
+    "mkon": "[\n  a, b, c\n  d, e, f\n]",
+    "value": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f"
+    ],
+    "text": "[\n  a\n  b\n  c\n  d\n  e\n  f\n]\n"
+  },
+  {
+    "name": "braceless root, several pairs per line",
+    "mkon": "a: x, b: y\nc: z",
+    "value": {
+      "a": "x",
+      "b": "y",
+      "c": "z"
+    },
+    "text": "{\n  a: x\n  b: y\n  c: z\n}\n"
+  },
+  {
+    "name": "balanced brackets stay in value",
+    "mkon": "{ f: \\frac{a,b}{c}, m: m[i, j], s: see [1] }",
+    "value": {
+      "f": "\\frac{a,b}{c}",
+      "m": "m[i, j]",
+      "s": "see [1]"
+    },
+    "text": "{\n  f: \\frac{a,b}{c}\n  m: m[i, j]\n  s: see [1]\n}\n"
+  },
+  {
+    "name": "unclosed bracket runs to end of line",
+    "mkon": "{\n  open: a{b, c\n  last: ok\n}",
+    "value": {
+      "open": "a{b, c",
+      "last": "ok"
+    },
+    "text": "{\n  open: \"a{b, c\"\n  last: ok\n}\n"
+  },
+  {
+    "name": "comma inside quotes",
+    "mkon": "[ \"a, b\", 'c, d', '''e, f''', g ]",
+    "value": [
+      "a, b",
+      "c, d",
+      "e, f",
+      "g"
+    ],
+    "text": "[\n  \"a, b\"\n  \"c, d\"\n  \"e, f\"\n  g\n]\n"
+  },
+  {
+    "name": "bare root value runs to end of line",
+    "mkon": "Hello, world",
+    "value": "Hello, world",
+    "text": "\"Hello, world\"\n"
+  },
+  {
+    "name": "comma in multiline text is an error",
+    "mkon": "{\n  a: Hello, world\n}",
+    "error": true,
+    "message": "Found '}' where a key name was expected (check your syntax or use quotes if the key name includes {}[],: or whitespace)"
+  },
+  {
+    "name": "stray closing bracket",
+    "mkon": "{ a: x] }",
+    "error": true,
+    "message": "Found ']' where a key name was expected (check your syntax or use quotes if the key name includes {}[],: or whitespace)"
+  },
+  {
+    "name": "hash is not a comment",
+    "mkon": "{ color: #fff, tag: a # b, '#k': 1 }",
+    "value": {
+      "color": "#fff",
+      "tag": "a # b",
+      "#k": 1
+    },
+    "text": "{\n  color: #fff\n  tag: a # b\n  #k: 1\n}\n"
+  },
+  {
+    "name": "hash at line start is a key char",
+    "mkon": "{\n  #tag: 1\n}",
+    "value": {
+      "#tag": 1
+    },
+    "text": "{\n  #tag: 1\n}\n"
+  },
+  {
+    "name": "js comments",
+    "mkon": "{\n  // c\n  a: 1 // c\n  /* c */ b: 2 /* c */\n}",
+    "value": {
+      "a": 1,
+      "b": 2
+    },
+    "text": "{\n  a: 1\n  b: 2\n}\n"
+  },
+  {
+    "name": "comment after quoteless is part of string",
+    "mkon": "{ a: x // y\n}",
+    "value": {
+      "a": "x // y"
+    },
+    "text": "{\n  a: x // y\n}\n"
+  },
+  {
+    "name": "special numbers",
+    "mkon": "[NaN, Infinity, +Infinity, -Infinity, -0, 0, 1.5, -2e-7, 1e21, 1e-7, 123e-20, 0.000001, 1.50, 5.0, 1E3]",
+    "value": [
+      {
+        "$number": "NaN"
+      },
+      {
+        "$number": "Infinity"
+      },
+      {
+        "$number": "Infinity"
+      },
+      {
+        "$number": "-Infinity"
+      },
+      {
+        "$number": "-0"
+      },
+      0,
+      1.5,
+      -2e-7,
+      1e+21,
+      1e-7,
+      1.23e-18,
+      0.000001,
+      1.5,
+      5,
+      1000
+    ],
+    "text": "[\n  NaN\n  Infinity\n  Infinity\n  -Infinity\n  -0\n  0\n  1.5\n  -2e-7\n  1e+21\n  1e-7\n  1.23e-18\n  0.000001\n  1.5\n  5\n  1000\n]\n"
+  },
+  {
+    "name": "special number spellings stay strings",
+    "mkon": "[nan, inf, -inf, Inf, NAN, infinity, Infinity war, NaN!, +1, + Infinity, 1e400, 00, 01, .5, 0x1F]",
+    "value": [
+      "nan",
+      "inf",
+      "-inf",
+      "Inf",
+      "NAN",
+      "infinity",
+      "Infinity war",
+      "NaN!",
+      "+1",
+      "+ Infinity",
+      "1e400",
+      "00",
+      "01",
+      ".5",
+      "0x1F"
+    ],
+    "text": "[\n  nan\n  inf\n  -inf\n  Inf\n  NAN\n  infinity\n  Infinity war\n  NaN!\n  +1\n  + Infinity\n  1e400\n  00\n  01\n  .5\n  0x1F\n]\n"
+  },
+  {
+    "name": "strings that look like literals are quoted",
+    "input": [
+      "NaN",
+      "Infinity",
+      "-Infinity",
+      "+Infinity",
+      "-0",
+      "1",
+      "1.5",
+      "true",
+      "null",
+      "NaN, x",
+      "1 // c",
+      "true /* c */"
+    ],
+    "text": "[\n  \"NaN\"\n  \"Infinity\"\n  \"-Infinity\"\n  \"+Infinity\"\n  \"-0\"\n  \"1\"\n  \"1.5\"\n  \"true\"\n  \"null\"\n  \"NaN, x\"\n  \"1 // c\"\n  \"true /* c */\"\n]\n",
+    "value": [
+      "NaN",
+      "Infinity",
+      "-Infinity",
+      "+Infinity",
+      "-0",
+      "1",
+      "1.5",
+      "true",
+      "null",
+      "NaN, x",
+      "1 // c",
+      "true /* c */"
+    ]
+  },
+  {
+    "name": "special numbers from values",
+    "input": [
+      {
+        "$number": "NaN"
+      },
+      {
+        "$number": "Infinity"
+      },
+      {
+        "$number": "-Infinity"
+      },
+      {
+        "$number": "-0"
+      },
+      0,
+      1e+21,
+      1e-7,
+      0.1,
+      100,
+      -1.25e-300,
+      5e-324,
+      1.7976931348623157e+308
+    ],
+    "text": "[\n  NaN\n  Infinity\n  -Infinity\n  -0\n  0\n  1e+21\n  1e-7\n  0.1\n  100\n  -1.25e-300\n  5e-324\n  1.7976931348623157e+308\n]\n",
+    "value": [
+      {
+        "$number": "NaN"
+      },
+      {
+        "$number": "Infinity"
+      },
+      {
+        "$number": "-Infinity"
+      },
+      {
+        "$number": "-0"
+      },
+      0,
+      1e+21,
+      1e-7,
+      0.1,
+      100,
+      -1.25e-300,
+      5e-324,
+      1.7976931348623157e+308
+    ]
+  },
+  {
+    "name": "dates",
+    "mkon": "{ d: 2024-01-15, t: 2024-01-15T10:30Z, s: 2024-01-15T10:30:45Z, ms: 2024-01-15T10:30:45.123Z, us: 2024-01-15T10:30:45.123456Z, off: 2024-01-15T13:30:00+03:00, neg: 2024-01-15T05:00:00-05:30 }",
+    "value": {
+      "d": {
+        "$date": "2024-01-15T00:00:00.000Z"
+      },
+      "t": {
+        "$date": "2024-01-15T10:30:00.000Z"
+      },
+      "s": {
+        "$date": "2024-01-15T10:30:45.000Z"
+      },
+      "ms": {
+        "$date": "2024-01-15T10:30:45.123Z"
+      },
+      "us": {
+        "$date": "2024-01-15T10:30:45.123Z"
+      },
+      "off": {
+        "$date": "2024-01-15T10:30:00.000Z"
+      },
+      "neg": {
+        "$date": "2024-01-15T10:30:00.000Z"
+      }
+    },
+    "text": "{\n  d: 2024-01-15\n  t: 2024-01-15T10:30:00Z\n  s: 2024-01-15T10:30:45Z\n  ms: 2024-01-15T10:30:45.123Z\n  us: 2024-01-15T10:30:45.123Z\n  off: 2024-01-15T10:30:00Z\n  neg: 2024-01-15T10:30:00Z\n}\n"
+  },
+  {
+    "name": "date-like strings stay strings",
+    "mkon": "[2024-01-15T10:30, 2024-01-15 10:30Z, 2024-1-5, 20240115, 2024-01-15 is a date, 2024-01-15T10:30:00z, 2024/01/15, \"2024-01-15\"]",
+    "value": [
+      "2024-01-15T10:30",
+      "2024-01-15 10:30Z",
+      "2024-1-5",
+      20240115,
+      "2024-01-15 is a date",
+      "2024-01-15T10:30:00z",
+      "2024/01/15",
+      "2024-01-15"
+    ],
+    "text": "[\n  2024-01-15T10:30\n  2024-01-15 10:30Z\n  2024-1-5\n  20240115\n  2024-01-15 is a date\n  2024-01-15T10:30:00z\n  2024/01/15\n  \"2024-01-15\"\n]\n"
+  },
+  {
+    "name": "date with trailing comment",
+    "mkon": "{ d: 2024-01-15 // c\n e: 2024-01-15T10:30Z /* c */ }",
+    "value": {
+      "d": {
+        "$date": "2024-01-15T00:00:00.000Z"
+      },
+      "e": {
+        "$date": "2024-01-15T10:30:00.000Z"
+      }
+    },
+    "text": "{\n  d: 2024-01-15\n  e: 2024-01-15T10:30:00Z\n}\n"
+  },
+  {
+    "name": "bare root date-time",
+    "mkon": "2024-01-15T10:30Z",
+    "value": {
+      "$date": "2024-01-15T10:30:00.000Z"
+    },
+    "text": "2024-01-15T10:30:00Z\n"
+  },
+  {
+    "name": "root date-time-like object",
+    "mkon": "2024-01-15T10:30: x",
+    "value": {
+      "2024-01-15T10": "30: x"
+    },
+    "text": "{\n  2024-01-15T10: 30: x\n}\n"
+  },
+  {
+    "name": "invalid date is an error",
+    "mkon": "{ d: 2024-02-30 }",
+    "error": true,
+    "message": "Invalid date '2024-02-30'"
+  },
+  {
+    "name": "invalid time is an error",
+    "mkon": "{ d: 2024-01-15T24:00Z }",
+    "error": true,
+    "message": "Invalid date '2024-01-15T24:00Z'"
+  },
+  {
+    "name": "leap years",
+    "mkon": "[2000-02-29, 2024-02-29]",
+    "value": [
+      {
+        "$date": "2000-02-29T00:00:00.000Z"
+      },
+      {
+        "$date": "2024-02-29T00:00:00.000Z"
+      }
+    ],
+    "text": "[\n  2000-02-29\n  2024-02-29\n]\n"
+  },
+  {
+    "name": "non-leap 1900 is an error",
+    "mkon": "1900-02-29",
+    "error": true,
+    "message": "Invalid date '1900-02-29'"
+  },
+  {
+    "name": "date values",
+    "input": [
+      {
+        "$date": "2024-01-15T00:00:00.000Z"
+      },
+      {
+        "$date": "2024-01-15T10:30:00.000Z"
+      },
+      {
+        "$date": "2024-01-15T10:30:00.250Z"
+      },
+      {
+        "$date": "0050-06-01T00:00:00.000Z"
+      }
+    ],
+    "text": "[\n  2024-01-15\n  2024-01-15T10:30:00Z\n  2024-01-15T10:30:00.250Z\n  0050-06-01\n]\n",
+    "value": [
+      {
+        "$date": "2024-01-15T00:00:00.000Z"
+      },
+      {
+        "$date": "2024-01-15T10:30:00.000Z"
+      },
+      {
+        "$date": "2024-01-15T10:30:00.250Z"
+      },
+      {
+        "$date": "0050-06-01T00:00:00.000Z"
+      }
+    ]
+  },
+  {
+    "name": "date-like strings are quoted",
+    "input": [
+      "2024-01-15",
+      "2024-01-15T10:30Z",
+      "2024-02-30",
+      "2024-01-15 // x",
+      "on 2024-01-15"
+    ],
+    "text": "[\n  \"2024-01-15\"\n  \"2024-01-15T10:30Z\"\n  \"2024-02-30\"\n  \"2024-01-15 // x\"\n  on 2024-01-15\n]\n",
+    "value": [
+      "2024-01-15",
+      "2024-01-15T10:30Z",
+      "2024-02-30",
+      "2024-01-15 // x",
+      "on 2024-01-15"
+    ]
+  },
+  {
+    "name": "year 0000",
+    "mkon": "0000-01-01",
+    "py": "skip: Python datetime has no year 0 (MINYEAR = 1)",
+    "value": {
+      "$date": "0000-01-01T00:00:00.000Z"
+    },
+    "text": "0000-01-01\n"
+  },
+  {
+    "name": "escapes",
+    "mkon": "[\"a\\tb\", \"\\u0041\\u00e9\", \"\\ud83d\\ude00\", \"q\\\"q\", 'q\\'q', \"\\/\"]",
+    "value": [
+      "a\tb",
+      "Aé",
+      "😀",
+      "q\"q",
+      "q'q",
+      "/"
+    ],
+    "text": "[\n  '''a\tb'''\n  Aé\n  😀\n  q\"q\n  q'q\n  /\n]\n"
+  },
+  {
+    "name": "strings needing escapes",
+    "input": [
+      "tab\there",
+      "nl\nx",
+      "bell\u0007",
+      "zw​j",
+      "﻿bom",
+      "quote\"s",
+      "back\\slash",
+      "both ' and \"",
+      " lead",
+      "trail ",
+      ""
+    ],
+    "text": "[\n  '''tab\there'''\n  '''\n  nl\n  x\n  '''\n  \"bell\\u0007\"\n  zw​j\n  \"\\ufeffbom\"\n  quote\"s\n  back\\slash\n  both ' and \"\n  \" lead\"\n  \"trail \"\n  \"\"\n]\n",
+    "value": [
+      "tab\there",
+      "nl\nx",
+      "bell\u0007",
+      "zw​j",
+      "﻿bom",
+      "quote\"s",
+      "back\\slash",
+      "both ' and \"",
+      " lead",
+      "trail ",
+      ""
+    ]
+  },
+  {
+    "name": "astral characters",
+    "input": {
+      "emoji": "😀 x",
+      "k😀": "v",
+      "mixed": "a😀b, c"
+    },
+    "text": "{\n  emoji: 😀 x\n  k😀: v\n  mixed: \"a😀b, c\"\n}\n",
+    "value": {
+      "emoji": "😀 x",
+      "k😀": "v",
+      "mixed": "a😀b, c"
+    }
+  },
+  {
+    "name": "multiline string with astral indent",
+    "mkon": "{\n  k😀: '''\n         x\n        '''\n}",
+    "value": {
+      "k😀": "  x\n "
+    },
+    "text": "{\n  k😀:\n    '''\n      x\n     \n    '''\n}\n"
+  },
+  {
+    "name": "multiline string",
+    "mkon": "{\n  a:\n    '''\n    line 1\n      line 2\n    '''\n}",
+    "value": {
+      "a": "line 1\n  line 2"
+    },
+    "text": "{\n  a:\n    '''\n    line 1\n      line 2\n    '''\n}\n"
+  },
+  {
+    "name": "multiline from value",
+    "input": {
+      "a": "line 1\nline 2",
+      "b": "x\n",
+      "c": "'quoted'\nsecond"
+    },
+    "text": "{\n  a:\n    '''\n    line 1\n    line 2\n    '''\n  b:\n    '''\n    x\n\n    '''\n  c:\n    '''\n    'quoted'\n    second\n    '''\n}\n",
+    "value": {
+      "a": "line 1\nline 2",
+      "b": "x\n",
+      "c": "'quoted'\nsecond"
+    }
+  },
+  {
+    "name": "integer-like keys order",
+    "mkon": "{b: 1, 2: x, 1: y, 10: z, 01: w, 4294967295: big, 4294967294: max}",
+    "value": {
+      "1": "y",
+      "2": "x",
+      "10": "z",
+      "4294967294": "max",
+      "b": 1,
+      "01": "w",
+      "4294967295": "big"
+    },
+    "text": "{\n  1: y\n  2: x\n  10: z\n  4294967294: max\n  b: 1\n  01: w\n  4294967295: big\n}\n"
+  },
+  {
+    "name": "duplicate keys keep first position",
+    "mkon": "{a: 1, b: 2, a: 3}",
+    "value": {
+      "a": 3,
+      "b": 2
+    },
+    "text": "{\n  a: 3\n  b: 2\n}\n"
+  },
+  {
+    "name": "empty containers",
+    "mkon": "{ a: {}, b: [], c: [[]], d: [{}] }",
+    "value": {
+      "a": {},
+      "b": [],
+      "c": [
+        []
+      ],
+      "d": [
+        {}
+      ]
+    },
+    "text": "{\n  a: {}\n  b: []\n  c:\n  [\n    []\n  ]\n  d:\n  [\n    {}\n  ]\n}\n"
+  },
+  {
+    "name": "nested",
+    "mkon": "{ a: { b: { c: [1, { d: 2 }] } } }",
+    "value": {
+      "a": {
+        "b": {
+          "c": [
+            1,
+            {
+              "d": 2
+            }
+          ]
+        }
+      }
+    },
+    "text": "{\n  a:\n  {\n    b:\n    {\n      c:\n      [\n        1\n        {\n          d: 2\n        }\n      ]\n    }\n  }\n}\n"
+  },
+  {
+    "name": "options {\"quotes\": \"all\"}",
+    "mkon": "{ z: 1, a: [x, \"y z\", 3], b: { c: \"multi\\nline\", d: \"it's\", é: 😀, 2: n }, t: \"tab\\tx\" }",
+    "options": {
+      "quotes": "all"
+    },
+    "value": {
+      "z": 1,
+      "a": [
+        "x",
+        "y z",
+        3
+      ],
+      "b": {
+        "2": "n",
+        "c": "multi\nline",
+        "d": "it's",
+        "é": "😀"
+      },
+      "t": "tab\tx"
+    },
+    "text": "{\n  \"z\": 1\n  \"a\":\n  [\n    \"x\"\n    \"y z\"\n    3\n  ]\n  \"b\":\n  {\n    \"2\": \"n\"\n    \"c\": \"multi\\nline\"\n    \"d\": \"it's\"\n    \"é\": \"😀\"\n  }\n  \"t\": \"tab\\tx\"\n}\n"
+  },
+  {
+    "name": "options {\"quotes\": \"keys\"}",
+    "mkon": "{ z: 1, a: [x, \"y z\", 3], b: { c: \"multi\\nline\", d: \"it's\", é: 😀, 2: n }, t: \"tab\\tx\" }",
+    "options": {
+      "quotes": "keys"
+    },
+    "value": {
+      "z": 1,
+      "a": [
+        "x",
+        "y z",
+        3
+      ],
+      "b": {
+        "2": "n",
+        "c": "multi\nline",
+        "d": "it's",
+        "é": "😀"
+      },
+      "t": "tab\tx"
+    },
+    "text": "{\n  \"z\": 1\n  \"a\":\n  [\n    x\n    y z\n    3\n  ]\n  \"b\":\n  {\n    \"2\": n\n    \"c\":\n      '''\n      multi\n      line\n      '''\n    \"d\": it's\n    \"é\": 😀\n  }\n  \"t\": '''tab\tx'''\n}\n"
+  },
+  {
+    "name": "options {\"quotes\": \"strings\"}",
+    "mkon": "{ z: 1, a: [x, \"y z\", 3], b: { c: \"multi\\nline\", d: \"it's\", é: 😀, 2: n }, t: \"tab\\tx\" }",
+    "options": {
+      "quotes": "strings"
+    },
+    "value": {
+      "z": 1,
+      "a": [
+        "x",
+        "y z",
+        3
+      ],
+      "b": {
+        "2": "n",
+        "c": "multi\nline",
+        "d": "it's",
+        "é": "😀"
+      },
+      "t": "tab\tx"
+    },
+    "text": "{\n  z: 1\n  a:\n  [\n    \"x\"\n    \"y z\"\n    3\n  ]\n  b:\n  {\n    2: \"n\"\n    c: \"multi\\nline\"\n    d: \"it's\"\n    é: \"😀\"\n  }\n  t: \"tab\\tx\"\n}\n"
+  },
+  {
+    "name": "options {\"separator\": true}",
+    "mkon": "{ z: 1, a: [x, \"y z\", 3], b: { c: \"multi\\nline\", d: \"it's\", é: 😀, 2: n }, t: \"tab\\tx\" }",
+    "options": {
+      "separator": true
+    },
+    "value": {
+      "z": 1,
+      "a": [
+        "x",
+        "y z",
+        3
+      ],
+      "b": {
+        "2": "n",
+        "c": "multi\nline",
+        "d": "it's",
+        "é": "😀"
+      },
+      "t": "tab\tx"
+    },
+    "text": "{\n  z: 1,\n  a:\n  [\n    \"x\",\n    \"y z\",\n    3\n  ],\n  b:\n  {\n    2: \"n\",\n    c: \"multi\\nline\",\n    d: \"it's\",\n    é: \"😀\"\n  },\n  t: \"tab\\tx\"\n}\n"
+  },
+  {
+    "name": "options {\"condense\": 40}",
+    "mkon": "{ z: 1, a: [x, \"y z\", 3], b: { c: \"multi\\nline\", d: \"it's\", é: 😀, 2: n }, t: \"tab\\tx\" }",
+    "options": {
+      "condense": 40
+    },
+    "value": {
+      "z": 1,
+      "a": [
+        "x",
+        "y z",
+        3
+      ],
+      "b": {
+        "2": "n",
+        "c": "multi\nline",
+        "d": "it's",
+        "é": "😀"
+      },
+      "t": "tab\tx"
+    },
+    "text": "{\n  z: 1\n  a: [\"x\", \"y z\", 3]\n  b:\n  {\n    2: n\n    c:\n      '''\n      multi\n      line\n      '''\n    d: it's\n    é: 😀\n  }\n  t: '''tab\tx'''\n}\n"
+  },
+  {
+    "name": "options {\"bracesSameLine\": true}",
+    "mkon": "{ z: 1, a: [x, \"y z\", 3], b: { c: \"multi\\nline\", d: \"it's\", é: 😀, 2: n }, t: \"tab\\tx\" }",
+    "options": {
+      "bracesSameLine": true
+    },
+    "value": {
+      "z": 1,
+      "a": [
+        "x",
+        "y z",
+        3
+      ],
+      "b": {
+        "2": "n",
+        "c": "multi\nline",
+        "d": "it's",
+        "é": "😀"
+      },
+      "t": "tab\tx"
+    },
+    "text": "{\n  z: 1\n  a: [\n    x\n    y z\n    3\n  ]\n  b: {\n    2: n\n    c:\n      '''\n      multi\n      line\n      '''\n    d: it's\n    é: 😀\n  }\n  t: '''tab\tx'''\n}\n"
+  },
+  {
+    "name": "options {\"emitRootBraces\": false}",
+    "mkon": "{ z: 1, a: [x, \"y z\", 3], b: { c: \"multi\\nline\", d: \"it's\", é: 😀, 2: n }, t: \"tab\\tx\" }",
+    "options": {
+      "emitRootBraces": false
+    },
+    "value": {
+      "z": 1,
+      "a": [
+        "x",
+        "y z",
+        3
+      ],
+      "b": {
+        "2": "n",
+        "c": "multi\nline",
+        "d": "it's",
+        "é": "😀"
+      },
+      "t": "tab\tx"
+    },
+    "text": "z: 1\na:\n[\n  x\n  y z\n  3\n]\nb:\n{\n  2: n\n  c:\n    '''\n    multi\n    line\n    '''\n  d: it's\n  é: 😀\n}\nt: '''tab\tx'''\n"
+  },
+  {
+    "name": "options {\"space\": 4}",
+    "mkon": "{ z: 1, a: [x, \"y z\", 3], b: { c: \"multi\\nline\", d: \"it's\", é: 😀, 2: n }, t: \"tab\\tx\" }",
+    "options": {
+      "space": 4
+    },
+    "value": {
+      "z": 1,
+      "a": [
+        "x",
+        "y z",
+        3
+      ],
+      "b": {
+        "2": "n",
+        "c": "multi\nline",
+        "d": "it's",
+        "é": "😀"
+      },
+      "t": "tab\tx"
+    },
+    "text": "{\n    z: 1\n    a:\n    [\n        x\n        y z\n        3\n    ]\n    b:\n    {\n        2: n\n        c:\n            '''\n            multi\n            line\n            '''\n        d: it's\n        é: 😀\n    }\n    t: '''tab\tx'''\n}\n"
+  },
+  {
+    "name": "options {\"space\": \"\\t\"}",
+    "mkon": "{ z: 1, a: [x, \"y z\", 3], b: { c: \"multi\\nline\", d: \"it's\", é: 😀, 2: n }, t: \"tab\\tx\" }",
+    "options": {
+      "space": "\t"
+    },
+    "value": {
+      "z": 1,
+      "a": [
+        "x",
+        "y z",
+        3
+      ],
+      "b": {
+        "2": "n",
+        "c": "multi\nline",
+        "d": "it's",
+        "é": "😀"
+      },
+      "t": "tab\tx"
+    },
+    "text": "{\n\tz: 1\n\ta:\n\t[\n\t\tx\n\t\ty z\n\t\t3\n\t]\n\tb:\n\t{\n\t\t2: n\n\t\tc:\n\t\t\t'''\n\t\t\tmulti\n\t\t\tline\n\t\t\t'''\n\t\td: it's\n\t\té: 😀\n\t}\n\tt: '''tab\tx'''\n}\n"
+  },
+  {
+    "name": "options {\"sortProps\": true}",
+    "mkon": "{ z: 1, a: [x, \"y z\", 3], b: { c: \"multi\\nline\", d: \"it's\", é: 😀, 2: n }, t: \"tab\\tx\" }",
+    "options": {
+      "sortProps": true
+    },
+    "value": {
+      "z": 1,
+      "a": [
+        "x",
+        "y z",
+        3
+      ],
+      "b": {
+        "2": "n",
+        "c": "multi\nline",
+        "d": "it's",
+        "é": "😀"
+      },
+      "t": "tab\tx"
+    },
+    "text": "{\n  a:\n  [\n    x\n    y z\n    3\n  ]\n  b:\n  {\n    2: n\n    c:\n      '''\n      multi\n      line\n      '''\n    d: it's\n    é: 😀\n  }\n  t: '''tab\tx'''\n  z: 1\n}\n"
+  },
+  {
+    "name": "options {\"quoteChar\": \"'\"}",
+    "mkon": "{ z: 1, a: [x, \"y z\", 3], b: { c: \"multi\\nline\", d: \"it's\", é: 😀, 2: n }, t: \"tab\\tx\" }",
+    "options": {
+      "quoteChar": "'"
+    },
+    "value": {
+      "z": 1,
+      "a": [
+        "x",
+        "y z",
+        3
+      ],
+      "b": {
+        "2": "n",
+        "c": "multi\nline",
+        "d": "it's",
+        "é": "😀"
+      },
+      "t": "tab\tx"
+    },
+    "text": "{\n  z: 1\n  a:\n  [\n    x\n    y z\n    3\n  ]\n  b:\n  {\n    2: n\n    c:\n      '''\n      multi\n      line\n      '''\n    d: it's\n    é: 😀\n  }\n  t: '''tab\tx'''\n}\n"
+  },
+  {
+    "name": "options {\"multiline\": \"off\"}",
+    "mkon": "{ z: 1, a: [x, \"y z\", 3], b: { c: \"multi\\nline\", d: \"it's\", é: 😀, 2: n }, t: \"tab\\tx\" }",
+    "options": {
+      "multiline": "off"
+    },
+    "value": {
+      "z": 1,
+      "a": [
+        "x",
+        "y z",
+        3
+      ],
+      "b": {
+        "2": "n",
+        "c": "multi\nline",
+        "d": "it's",
+        "é": "😀"
+      },
+      "t": "tab\tx"
+    },
+    "text": "{\n  z: 1\n  a:\n  [\n    x\n    y z\n    3\n  ]\n  b:\n  {\n    2: n\n    c: \"multi\\nline\"\n    d: it's\n    é: 😀\n  }\n  t: \"tab\\tx\"\n}\n"
+  },
+  {
+    "name": "options {\"multiline\": \"no-tabs\"}",
+    "mkon": "{ z: 1, a: [x, \"y z\", 3], b: { c: \"multi\\nline\", d: \"it's\", é: 😀, 2: n }, t: \"tab\\tx\" }",
+    "options": {
+      "multiline": "no-tabs"
+    },
+    "value": {
+      "z": 1,
+      "a": [
+        "x",
+        "y z",
+        3
+      ],
+      "b": {
+        "2": "n",
+        "c": "multi\nline",
+        "d": "it's",
+        "é": "😀"
+      },
+      "t": "tab\tx"
+    },
+    "text": "{\n  z: 1\n  a:\n  [\n    x\n    y z\n    3\n  ]\n  b:\n  {\n    2: n\n    c:\n      '''\n      multi\n      line\n      '''\n    d: it's\n    é: 😀\n  }\n  t: \"tab\\tx\"\n}\n"
+  },
+  {
+    "name": "options {\"eol\": \"\\r\\n\"}",
+    "mkon": "{ z: 1, a: [x, \"y z\", 3], b: { c: \"multi\\nline\", d: \"it's\", é: 😀, 2: n }, t: \"tab\\tx\" }",
+    "options": {
+      "eol": "\r\n"
+    },
+    "value": {
+      "z": 1,
+      "a": [
+        "x",
+        "y z",
+        3
+      ],
+      "b": {
+        "2": "n",
+        "c": "multi\nline",
+        "d": "it's",
+        "é": "😀"
+      },
+      "t": "tab\tx"
+    },
+    "text": "{\r\n  z: 1\r\n  a:\r\n  [\r\n    x\r\n    y z\r\n    3\r\n  ]\r\n  b:\r\n  {\r\n    2: n\r\n    c:\r\n      '''\r\n      multi\r\n      line\r\n      '''\r\n    d: it's\r\n    é: 😀\r\n  }\r\n  t: '''tab\tx'''\r\n}\r\n"
+  },
+  {
+    "name": "options {\"colors\": true}",
+    "mkon": "{ z: 1, a: [x, \"y z\", 3], b: { c: \"multi\\nline\", d: \"it's\", é: 😀, 2: n }, t: \"tab\\tx\" }",
+    "options": {
+      "colors": true
+    },
+    "value": {
+      "z": 1,
+      "a": [
+        "x",
+        "y z",
+        3
+      ],
+      "b": {
+        "2": "n",
+        "c": "multi\nline",
+        "d": "it's",
+        "é": "😀"
+      },
+      "t": "tab\tx"
+    },
+    "text": "\u001b[37m{\u001b[0m\n  \u001b[33mz\u001b[0m\u001b[37m:\u001b[0m \u001b[36;1m1\u001b[0m\n  \u001b[33ma\u001b[0m\u001b[37m:\u001b[0m\n  \u001b[37m[\u001b[0m\n    \u001b[37;1mx\u001b[0m\n    \u001b[37;1my z\u001b[0m\n    \u001b[36;1m3\u001b[0m\n  \u001b[37m]\u001b[0m\n  \u001b[33mb\u001b[0m\u001b[37m:\u001b[0m\n  \u001b[37m{\u001b[0m\n    \u001b[33m2\u001b[0m\u001b[37m:\u001b[0m \u001b[37;1mn\u001b[0m\n    \u001b[33mc\u001b[0m\u001b[37m:\u001b[0m\n      \u001b[37;1m'''\n      multi\n      line\n      '''\u001b[0m\n    \u001b[33md\u001b[0m\u001b[37m:\u001b[0m \u001b[37;1mit's\u001b[0m\n    \u001b[33mé\u001b[0m\u001b[37m:\u001b[0m \u001b[37;1m😀\u001b[0m\n  \u001b[37m}\u001b[0m\n  \u001b[33mt\u001b[0m\u001b[37m:\u001b[0m \u001b[37;1m'''tab\tx'''\u001b[0m\n\u001b[37m}\u001b[0m\n"
+  },
+  {
+    "name": "condense counts utf-16 length",
+    "input": {
+      "a": [
+        "😀😀😀😀😀",
+        "x"
+      ],
+      "b": [
+        "😀😀😀😀😀😀",
+        "x"
+      ]
+    },
+    "options": {
+      "condense": 18
+    },
+    "text": "{\n  a: [\"😀😀😀😀😀\", \"x\"]\n  b:\n  [\n    😀😀😀😀😀😀\n    x\n  ]\n}\n",
+    "value": {
+      "a": [
+        "😀😀😀😀😀",
+        "x"
+      ],
+      "b": [
+        "😀😀😀😀😀😀",
+        "x"
+      ]
+    }
+  },
+  {
+    "name": "sortProps uses utf-16 order",
+    "input": {
+      "～": 1,
+      "😀": 2,
+      "a": 3,
+      "Z": 4
+    },
+    "options": {
+      "sortProps": true
+    },
+    "text": "{\n  Z: 4\n  a: 3\n  😀: 2\n  ～: 1\n}\n",
+    "value": {
+      "Z": 4,
+      "a": 3,
+      "😀": 2,
+      "～": 1
+    }
+  },
+  {
+    "name": "rt comments",
+    "mkon": "// top\n{\n  // about a\n  a: 1 // after\n  b: [1, 2] /* c */\n  /* block\n     comment */\n  c: { d: x }\n}\n// tail\n",
+    "rt": true,
+    "value": {
+      "a": 1,
+      "b": [
+        1,
+        2
+      ],
+      "c": {
+        "d": "x"
+      }
+    },
+    "text": "// top\n{\n  // about a\n  a: 1 // after\n  b:\n  [\n    1\n    2\n  ] /* c */\n  /* block\n  comment */\n  c:\n  {\n    d: x\n  }\n}\n// tail\n"
+  },
+  {
+    "name": "rt comment around scalar root is dropped",
+    "mkon": "// c\nhello",
+    "rt": true,
+    "value": "hello",
+    "text": "hello\n"
+  },
+  {
+    "name": "rt comment around date root is kept",
+    "mkon": "// c\n2024-01-15",
+    "rt": true,
+    "value": {
+      "$date": "2024-01-15T00:00:00.000Z"
+    },
+    "text": "// c\n2024-01-15\n"
+  },
+  {
+    "name": "rt duplicate keys",
+    "mkon": "{a: 1, b: 3, a: 2}",
+    "rt": true,
+    "value": {
+      "a": 2,
+      "b": 3
+    },
+    "text": "{\n  a: 2\n  b: 3\n}\n"
+  },
+  {
+    "name": "rt empty containers keep comments",
+    "mkon": "{\n  a: {\n    // only\n  }\n  b: [\n    // only\n  ]\n}",
+    "rt": true,
+    "value": {
+      "a": {},
+      "b": []
+    },
+    "text": "{\n  a:\n  {\n    // only\n  }\n  b:\n  [\n    // only\n  ]\n}\n"
+  },
+  {
+    "name": "rt braceless root",
+    "mkon": "// head\na: 1\n// mid\nb: 2\n",
+    "rt": true,
+    "value": {
+      "a": 1,
+      "b": 2
+    },
+    "text": "// head\n{\n  a: 1\n  // mid\n  b: 2\n}\n"
+  },
+  {
+    "name": "error: unclosed object",
+    "mkon": "{ a: 1",
+    "error": true,
+    "message": "End of input while parsing an object (missing '}')"
+  },
+  {
+    "name": "error: unclosed array",
+    "mkon": "[1, 2",
+    "error": true,
+    "message": "End of input while parsing an array (missing ']')"
+  },
+  {
+    "name": "error: bad escape",
+    "mkon": "\"\\x\"",
+    "error": true,
+    "message": "Bad string"
+  },
+  {
+    "name": "error: newline in string",
+    "mkon": "\"a\nb\"",
+    "error": true,
+    "message": "Bad string containing newline"
+  },
+  {
+    "name": "error: key with space",
+    "mkon": "{ a b: 1 }",
+    "error": true,
+    "message": "Found whitespace in your key name (use quotes to include)"
+  },
+  {
+    "name": "error: trailing characters",
+    "mkon": "{} x",
+    "error": true,
+    "message": "Syntax error, found trailing characters"
+  },
+  {
+    "name": "error: dsf-era hex in key position",
+    "mkon": "{ : 1 }",
+    "error": true,
+    "message": "Found ':' but no key name (for an empty key name use quotes)"
+  },
+  {
+    "name": "error: unterminated multiline",
+    "mkon": "'''abc",
+    "error": true,
+    "message": "Bad multiline string"
+  },
+  {
+    "name": "regression: \\r inside strings survives",
+    "input": {
+      "crlf": "a\r\nb",
+      "cr": "x\ry",
+      "lone": "\r"
+    },
+    "text": "{\n  crlf: \"a\\r\\nb\"\n  cr: \"x\\ry\"\n  lone: \"\\r\"\n}\n",
+    "value": {
+      "crlf": "a\r\nb",
+      "cr": "x\ry",
+      "lone": "\r"
+    }
+  },
+  {
+    "name": "regression: leading whitespace survives multiline",
+    "input": {
+      "tab": "\tx",
+      "spaces": "  world\\n",
+      "lines": "  a\n    b\n"
+    },
+    "text": "{\n  tab:\n    '''\n    \tx\n    '''\n  spaces:\n    '''\n      world\\n\n    '''\n  lines:\n    '''\n      a\n        b\n\n    '''\n}\n",
+    "value": {
+      "tab": "\tx",
+      "spaces": "  world\\n",
+      "lines": "  a\n    b\n"
+    }
+  },
+  {
+    "name": "regression: root string with colon stays a string",
+    "input": "T10:30Z and more: text",
+    "text": "\"T10:30Z and more: text\"\n",
+    "value": "T10:30Z and more: text"
+  },
+  {
+    "name": "regression: bracesSameLine + space 4 multiline",
+    "input": {
+      "a": "x\ny",
+      "abc": "  x\ny",
+      "list": [
+        "  x\ny"
+      ]
+    },
+    "options": {
+      "bracesSameLine": true,
+      "space": 4
+    },
+    "text": "{\n    a:\n        '''\n        x\n        y\n        '''\n    abc:\n        '''\n          x\n        y\n        '''\n    list: [\n        '''\n          x\n        y\n        '''\n    ]\n}\n",
+    "value": {
+      "a": "x\ny",
+      "abc": "  x\ny",
+      "list": [
+        "  x\ny"
+      ]
+    }
+  },
+  {
+    "name": "regression: integer beyond 2^53 is a double",
+    "input": [
+      9007199254740991,
+      9007199254740992,
+      -9007199254740992,
+      10000000000000000
+    ],
+    "text": "[\n  9007199254740991\n  9007199254740992\n  -9007199254740992\n  10000000000000000\n]\n",
+    "value": [
+      9007199254740991,
+      9007199254740992,
+      -9007199254740992,
+      10000000000000000
+    ]
+  },
+  {
+    "name": "regression: empty quoteless value at end of input",
+    "mkon": "a:",
+    "value": {
+      "a": ""
+    },
+    "text": "{\n  a: \"\"\n}\n"
+  },
+  {
+    "name": "regression: rt with null root",
+    "mkon": "// c\nnull",
+    "rt": true,
+    "value": null,
+    "text": "null\n"
+  }
+]
