@@ -179,19 +179,30 @@ export default function parse(source, opt) {
         }
     }
 
-    function tfnns() {
+    function tfnns(inContainer) {
         // Hjson strings can be quoteless
         // returns string, true, false, or null.
+        //
+        // Inside a container (array / object, including the braceless root object)
+        // a quoteless string ends at the first ',', '}' or ']' that is not inside
+        // a bracket pair opened within the string itself, e.g.
+        //   { a: x, b: [p, q] }   -> a = "x", b = ["p", "q"]
+        //   { f: \frac{a,b}{c} }  -> f = "\frac{a,b}{c}"
+        // A bare root value (no container) still runs to the end of the line.
         var value = ch
         if (isPunctuatorChar(ch))
             error("Found a punctuator character '" + ch + "' when expecting a quoteless string (check your syntax)")
+
+        var depth = 0 // brackets opened inside this quoteless string
 
         for (; ;) {
             next()
             // (detection of ml strings was moved to string())
             var isEol = ch === '\r' || ch === '\n' || ch === ''
-            if (isEol ||
-                ch === ',' || ch === '}' || ch === ']' ||
+            var isSep = ch === ',' || ch === '}' || ch === ']'
+            var endsString = isEol || inContainer && isSep && depth === 0
+            if (endsString ||
+                isSep ||
                 ch === '#' ||
                 ch === '/' && (peek(0) === '/' || peek(0) === '*')
             ) {
@@ -209,13 +220,15 @@ export default function parse(source, opt) {
                             if (n !== undefined) return n
                         }
                 }
-                if (isEol) {
+                if (endsString) {
                     // remove any whitespace at the end (ignored in quoteless strings)
                     value = value.trim()
                     var dsfValue = runDsf(value)
                     return dsfValue !== undefined ? dsfValue : value
                 }
             }
+            if (ch === '{' || ch === '[') depth++
+            else if ((ch === '}' || ch === ']') && depth > 0) depth--
             value += ch
         }
     }
@@ -276,7 +289,7 @@ export default function parse(source, opt) {
             if (possibleErr) {
                 return "found '" + ch + "' in a string value, your mistake could be with:\n" +
                     "  > " + possibleErr + "\n" +
-                    "  (unquoted strings contain everything up to the next line!)"
+                    "  (unquoted strings end at the next line or at a ',' / '}' / ']' outside of brackets!)"
             } else return ""
         }
 
@@ -303,7 +316,7 @@ export default function parse(source, opt) {
             }
 
             while (ch) {
-                array.push(value())
+                array.push(value(true))
                 cAt = at
                 white()
                 // in Hjson the comma is optional and trailing commas are allowed
@@ -363,7 +376,7 @@ export default function parse(source, opt) {
                 if (ch !== ':') error("Expected ':' instead of '" + ch + "'")
                 next()
                 // duplicate keys overwrite the previous value
-                object[key] = value()
+                object[key] = value(true)
                 cAt = at
                 white()
                 // in Hjson the comma is optional and trailing commas are allowed
@@ -391,7 +404,7 @@ export default function parse(source, opt) {
         }
     }
 
-    function value() {
+    function value(inContainer) {
         // Parse a Hjson value. It could be an object, an array, a string, a number or a word.
 
         white()
@@ -400,7 +413,7 @@ export default function parse(source, opt) {
             case '[': return array()
             case "'":
             case '"': return string(true)
-            default: return tfnns()
+            default: return tfnns(inContainer)
         }
     }
 

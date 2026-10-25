@@ -120,6 +120,26 @@ export default function stringify(data, opt) {
     const startsWithNL = (s) => !!(s && s[s[0] === '\r' ? 1 : 0] === '\n')
     const commentOnThisLine = (s) => !!s && !startsWithNL(s)
 
+    /**
+     * Would the parser cut this string short if written without quotes?
+     * Inside containers a quoteless string ends at ',' / '}' / ']' that is
+     * not inside a bracket pair opened within the string itself.
+     */
+    function breaksQuoteless(s) {
+        let depth = 0
+        for (let i = 0; i < s.length; i++) {
+            const c = s[i]
+            if (c === '{' || c === '[') depth++
+            else if (c === '}' || c === ']') {
+                if (depth === 0) return true
+                depth--
+            } else if (c === ',' && depth === 0) return true
+        }
+        // an unclosed bracket would swallow the rest of the line
+        // (matters when several values share a line, e.g. with `condense`)
+        return depth > 0
+    }
+
     function escapeRegExp(s) {
         return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     }
@@ -177,6 +197,7 @@ export default function stringify(data, opt) {
         if (
             quoteStrings || hasComment ||
             needsQuotes.test(string) ||
+            breaksQuoteless(string) ||
             tryParseNumber(string, true) !== undefined ||
             startsWithKeyword.test(string)
         ) {
