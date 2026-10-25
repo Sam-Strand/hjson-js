@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import parse from './parse.js'
-import { declarationFor, declarationPath } from './hjson-types.js'
+import { declarationFor, declarationPath } from './mkon-types.js'
 
 
 /**
@@ -26,7 +26,7 @@ function pickPaths(value, pick, ctx, file) {
             .reduce((o, k) => (o == null ? undefined : o[k]), value)
 
         if (v === undefined) {
-            ctx.error(`[hjson] path "${path}" not found in ${file}`)
+            ctx.error(`[mkon] path "${path}" not found in ${file}`)
             return null
         }
         out[path] = v
@@ -76,10 +76,10 @@ function writeIfChanged(file, content) {
 }
 
 /**
- * Vite-плагин для импорта .hjson файлов.
+ * Vite-плагин для импорта .mkon файлов.
  *
  * Поддерживает query-параметры в import-пути:
- *   import data from './file.hjson?as=config&pick=a.b,c&omit=d'
+ *   import data from './file.mkon?as=config&pick=a.b,c&omit=d'
  *
  * - `as=<name>`   — применить один из handlers (см. options.handlers)
  * - `pick=a.b,c`  — оставить только указанные пути
@@ -91,15 +91,15 @@ function writeIfChanged(file, content) {
  * @param {string|null} [options.default]
  *        Имя handler'а по умолчанию, если в import не указан `?as=...`.
  * @param {boolean} [options.dts=true]
- *        Генерировать рядом с каждым импортируемым (без query) `file.hjson`
- *        объявление `file.d.hjson.ts` с типом значения. В tsconfig нужен
+ *        Генерировать рядом с каждым импортируемым (без query) `file.mkon`
+ *        объявление `file.d.mkon.ts` с типом значения. В tsconfig нужен
  *        `"allowArbitraryExtensions": true`.
  */
-export default function hjson(options = {}) {
+export default function mkon(options = {}) {
     const handlers = options.handlers ?? {}
     const defaultHandler = options.default ?? null
     const dts = options.dts ?? true
-    /** .hjson-файлы, которые импортируются без query (для них пишутся объявления). */
+    /** .mkon-файлы, которые импортируются без query (для них пишутся объявления). */
     /** @type {Set<string>} */
     const imported = new Set()
 
@@ -122,7 +122,7 @@ export default function hjson(options = {}) {
         if (handlerName) {
             const handler = handlers[handlerName]
             if (!handler) {
-                ctx.error(`[hjson] unknown handler "${handlerName}" in ${file}`)
+                ctx.error(`[mkon] unknown handler "${handlerName}" in ${file}`)
                 return null
             }
             value = handler(value, params, { file, ctx })
@@ -142,7 +142,7 @@ export default function hjson(options = {}) {
     }
 
     /**
-     * Пишет `file.d.hjson.ts` с типом того, что даёт импорт без query.
+     * Пишет `file.d.mkon.ts` с типом того, что даёт импорт без query.
      *
      * @param {any} ctx
      * @param {string} file
@@ -159,11 +159,11 @@ export default function hjson(options = {}) {
     }
 
     return {
-        name: 'vite-plugin-hjson',
-        // 'pre' — обрабатываем .hjson раньше других плагинов Vite.
+        name: 'vite-plugin-mkon',
+        // 'pre' — обрабатываем .mkon раньше других плагинов Vite.
         enforce: 'pre',
 
-        /** В dev-режиме обновляем объявление при изменении .hjson. */
+        /** В dev-режиме обновляем объявление при изменении .mkon. */
         configureServer(server) {
             if (!dts) return
             const ctx = { error: (/** @type {string} */ msg) => server.config.logger.error(msg) }
@@ -173,7 +173,7 @@ export default function hjson(options = {}) {
                 try {
                     writeDeclaration(ctx, file)
                 } catch (e) {
-                    server.config.logger.error(`[hjson] ${file}: ${e instanceof Error ? e.message : e}`)
+                    server.config.logger.error(`[mkon] ${file}: ${e instanceof Error ? e.message : e}`)
                 }
             }
             server.watcher.on('add', update)
@@ -185,13 +185,13 @@ export default function hjson(options = {}) {
         },
 
         /**
-         * @param {string} code - Содержимое модуля (для .hjson не используется, читаем файл сами).
-         * @param {string} id   - Идентификатор модуля, может содержать query: "/abs/path/file.hjson?as=..."
+         * @param {string} code - Содержимое модуля (для .mkon не используется, читаем файл сами).
+         * @param {string} id   - Идентификатор модуля, может содержать query: "/abs/path/file.mkon?as=..."
          * @returns {{code:string,map:null}|null}
          */
         transform(code, id) {
             const [file, query = ''] = id.split('?')
-            if (!file.endsWith('.hjson')) return null
+            if (!file.endsWith('.mkon')) return null
 
             const loaded = load(this, file, new URLSearchParams(query))
             if (!loaded) return null

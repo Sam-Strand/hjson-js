@@ -2,7 +2,7 @@ FROM node:26-alpine
 
 RUN apk add --no-cache git
 
-WORKDIR /hjson
+WORKDIR /mkon
 
 RUN npm install -g pnpm
 

@@ -49,7 +49,7 @@ function makeColorToken() {
 // ============================================================================
 
 /**
- * Serialize a JS value to an Hjson string.
+ * Serialize a JS value to an mkon string.
  *
  * @param {unknown} data - Any JSON-serializable value.
  * @param {object} [opt] - Options.

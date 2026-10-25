@@ -7,7 +7,7 @@ pnpm install
 pnpm dev --host 0.0.0.0
 ```
 
-Открыть: http://localhost:5173/examples/hjson-demo.html
+Открыть: http://localhost:5173/examples/mkon-demo.html
 
 ## Вариант 2. Node на хост не ставим
 
@@ -30,4 +30,4 @@ pnpm dev --host 0.0.0.0
    `--host 0.0.0.0` обязателен: без него Vite слушает только
    `127.0.0.1` внутри контейнера, и с хоста не достучаться.
 4. VS Code предложит **Forward Port 5173** — согласиться.
-   Или открыть вручную: http://localhost:5173/examples/hjson-demo.html
+   Или открыть вручную: http://localhost:5173/examples/mkon-demo.html

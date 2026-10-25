@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'vitest'
-import Hjson from '../src/index.js'
+import mkon from '../src/index.js'
 
 // Quoteless strings inside containers end at ',' / '}' / ']'
 // that are not inside a bracket pair opened within the string itself.
 
-const p = (s) => Hjson.parse(s)
+const p = (s) => mkon.parse(s)
 
 describe('quoteless strings: separators', () => {
     test('inline object (the original issue)', () => {
@@ -85,10 +85,10 @@ describe('quoteless strings: separators', () => {
 })
 
 describe('stringify quotes strings the parser would cut', () => {
-    const rt = (v) => Hjson.parse(Hjson.stringify(v))
+    const rt = (v) => mkon.parse(mkon.stringify(v))
 
     test('values with separators are quoted', () => {
-        const s = Hjson.stringify({ a: 'x, y', b: 'p}', c: 'q]', d: 'ok' })
+        const s = mkon.stringify({ a: 'x, y', b: 'p}', c: 'q]', d: 'ok' })
         expect(s).toMatch(/a: "x, y"/)
         expect(s).toMatch(/b: "p}"/)
         expect(s).toMatch(/c: "q]"/)
@@ -96,7 +96,7 @@ describe('stringify quotes strings the parser would cut', () => {
     })
 
     test('balanced brackets do not force quotes', () => {
-        const s = Hjson.stringify({ f: '\\frac{a,b}{c}', m: 'm[i, j]' })
+        const s = mkon.stringify({ f: '\\frac{a,b}{c}', m: 'm[i, j]' })
         expect(s).toMatch(/f: \\frac\{a,b\}\{c\}/)
         expect(s).toMatch(/m: m\[i, j\]/)
     })
@@ -107,7 +107,7 @@ describe('stringify quotes strings the parser would cut', () => {
             obj: { k: 'v, w', l: 'p}q' },
         }
         expect(rt(data)).toEqual(data)
-        expect(Hjson.parse(Hjson.stringify(data, { condense: 200 }))).toEqual(data)
+        expect(mkon.parse(mkon.stringify(data, { condense: 200 }))).toEqual(data)
         expect(rt(['a, b'])).toEqual(['a, b'])
         expect(rt('Hello, world')).toBe('Hello, world')
     })

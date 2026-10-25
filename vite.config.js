@@ -1,21 +1,21 @@
 import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
 import vue from '@vitejs/plugin-vue'
-import hjson from './src/vite-plugin-hjson.js'
+import mkon from './src/vite-plugin-mkon.js'
 
 export default defineConfig({
     plugins: [
         vue(),
         dts(),
-        hjson()
+        mkon()
     ],
     build: {
         lib: {
             entry: {
                 index: 'src/index.js',
-                'vite-plugin-hjson': 'src/vite-plugin-hjson.js'
+                'vite-plugin-mkon': 'src/vite-plugin-mkon.js'
             },
-            name: 'hjson',
+            name: 'mkon',
             formats: ['es']
         },
         rollupOptions: {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import Hjson from '../src/index.js'
+import mkon from '../src/index.js'
 
 /**
  * Стабильность комментариев при round-trip.
@@ -86,12 +86,12 @@ const cases = [
  * публичный API parse() заполняет при keepWsc: true.
  */
 function commentMap(data) {
-    const HjsonComment = Hjson.comment
-    if (!HjsonComment || typeof HjsonComment.getComment !== 'function') return null
+    const mkonComment = mkon.comment
+    if (!mkonComment || typeof mkonComment.getComment !== 'function') return null
 
     const map = { root: [], keys: {}, elems: {} }
     const dump = (node, path) => {
-        const c = HjsonComment.getComment(node)
+        const c = mkonComment.getComment(node)
         if (!c) return
         if (c.r) map.root = c.r.slice()
         if (c.c) {
@@ -123,8 +123,8 @@ function commentMap(data) {
 describe('rt comments: комментарий остаётся на своём узле', () => {
     for (const [name, input, expected] of cases) {
         test(name, () => {
-            const data = Hjson.rt.parse(input)
-            const output = Hjson.rt.stringify(data)
+            const data = mkon.rt.parse(input)
+            const output = mkon.rt.stringify(data)
 
             // 1) формат совпадает с ожидаемым
             expect(output).toBe(expected)
@@ -135,11 +135,11 @@ describe('rt comments: комментарий остаётся на своём �
 describe('rt comments idempotent: комментарии не гуляют', () => {
     for (const [name, input] of cases) {
         test(name, () => {
-            const data1 = Hjson.rt.parse(input)
-            const text1 = Hjson.rt.stringify(data1)
+            const data1 = mkon.rt.parse(input)
+            const text1 = mkon.rt.stringify(data1)
 
-            const data2 = Hjson.rt.parse(text1)
-            const text2 = Hjson.rt.stringify(data2)
+            const data2 = mkon.rt.parse(text1)
+            const text2 = mkon.rt.stringify(data2)
 
             // 1) текст после повторного round-trip не меняется
             expect(text2).toBe(text1)
@@ -160,7 +160,7 @@ describe('rt comments idempotent: комментарии не гуляют', () 
 describe('rt comments: нет лишних переводов строк', () => {
     test('комментарий после значения не добавляет пустую строку', () => {
         const input = '{\n  a: 1 # hello\n}\n'
-        const output = Hjson.rt.stringify(Hjson.rt.parse(input))
+        const output = mkon.rt.stringify(mkon.rt.parse(input))
         // ровно один \n после комментария, не два
         expect(output).toBe('{\n  a: 1 # hello\n}\n')
         expect(output).not.toMatch(/# hello\n\n/)
@@ -168,14 +168,14 @@ describe('rt comments: нет лишних переводов строк', () =>
 
     test('корневой комментарий не добавляет пустую строку', () => {
         const input = '# header\na: 1\n'
-        const output = Hjson.rt.stringify(Hjson.rt.parse(input))
+        const output = mkon.rt.stringify(mkon.rt.parse(input))
         expect(output).toBe('# header\n{\n  a: 1\n}\n')
         expect(output).not.toMatch(/# header\n\n/)
     })
 
     test('комментарий перед ключом не добавляет пустую строку', () => {
         const input = '{\n  # first\n  a: 1\n}\n'
-        const output = Hjson.rt.stringify(Hjson.rt.parse(input))
+        const output = mkon.rt.stringify(mkon.rt.parse(input))
         expect(output).not.toMatch(/# first\n\n/)
     })
 })
@@ -183,7 +183,7 @@ describe('rt comments: нет лишних переводов строк', () =>
 describe('rt comments: комментарий не съезжает на соседний узел', () => {
     test('комментарий перед ключом остаётся перед ним', () => {
         const input = '{\n  # about a\n  a: 1\n  b: 2\n}\n'
-        const output = Hjson.rt.stringify(Hjson.rt.parse(input))
+        const output = mkon.rt.stringify(mkon.rt.parse(input))
         expect(output).toMatch(/# about a\s+a: 1/)
         // и НЕ оказался у b
         expect(output).not.toMatch(/# about a\s+b: 2/)
@@ -191,14 +191,14 @@ describe('rt comments: комментарий не съезжает на сос�
 
     test('комментарий перед элементом массива остаётся перед ним', () => {
         const input = '[\n  1\n  # about 2\n  2\n]\n'
-        const output = Hjson.rt.stringify(Hjson.rt.parse(input))
+        const output = mkon.rt.stringify(mkon.rt.parse(input))
         expect(output).toMatch(/# about 2\s+2/)
         expect(output).not.toMatch(/# about 2\s+1/)
     })
 
     test('два комментария не склеиваются в один', () => {
         const input = '{\n  # first\n  a: 1\n  # second\n  b: 2\n}\n'
-        const output = Hjson.rt.stringify(Hjson.rt.parse(input))
+        const output = mkon.rt.stringify(mkon.rt.parse(input))
         expect(output).toContain('# first')
         expect(output).toContain('# second')
         expect(output.indexOf('# first')).toBeLessThan(output.indexOf('# second'))
@@ -215,13 +215,13 @@ describe('rt comments: emitRootBraces=false не теряет корневой �
 
     for (const [name, input, expected] of cases) {
         test(name, () => {
-            const data = Hjson.rt.parse(input)
-            const output = Hjson.rt.stringify(data, { emitRootBraces: false })
+            const data = mkon.rt.parse(input)
+            const output = mkon.rt.stringify(data, { emitRootBraces: false })
             expect(output).toBe(expected)
 
             // и повторный round-trip стабилен
-            const data2 = Hjson.rt.parse(output)
-            const output2 = Hjson.rt.stringify(data2, { emitRootBraces: false })
+            const data2 = mkon.rt.parse(output)
+            const output2 = mkon.rt.stringify(data2, { emitRootBraces: false })
             expect(output2).toBe(output)
         })
     }

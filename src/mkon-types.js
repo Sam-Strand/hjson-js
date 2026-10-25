@@ -1,5 +1,5 @@
 /**
- * Вывод TypeScript-типа по значению, разобранному из Hjson.
+ * Вывод TypeScript-типа по значению, разобранному из mkon.
  *
  * Типы расширяются так же, как при `resolveJsonModule` в TypeScript:
  * `"a"` → `string`, `1` → `number`. Элементы-объекты массива сливаются
@@ -94,7 +94,7 @@ export function typeOf(value, indent = '') {
 }
 
 /**
- * Содержимое файла объявления (`file.d.hjson.ts`) для импорта `file.hjson`.
+ * Содержимое файла объявления (`file.d.mkon.ts`) для импорта `file.mkon`.
  *
  * @param {unknown} value - значение, которое экспортирует модуль
  * @param {string} source - имя исходного файла (для комментария)
@@ -102,19 +102,19 @@ export function typeOf(value, indent = '') {
  */
 export function declarationFor(value, source) {
     return (
-        `// Сгенерировано vite-plugin-hjson из ${source}. Не редактируйте вручную.\n` +
+        `// Сгенерировано vite-plugin-mkon из ${source}. Не редактируйте вручную.\n` +
         `declare const value: ${typeOf(value)}\n` +
         `export default value\n`
     )
 }
 
 /**
- * Путь файла объявления для `.hjson`-файла: `a/b.hjson` → `a/b.d.hjson.ts`.
+ * Путь файла объявления для `.mkon`-файла: `a/b.mkon` → `a/b.d.mkon.ts`.
  * TypeScript находит такие файлы при `allowArbitraryExtensions: true`.
  *
  * @param {string} file
  * @returns {string}
  */
 export function declarationPath(file) {
-    return file.replace(/\.hjson$/, '.d.hjson.ts')
+    return file.replace(/\.mkon$/, '.d.mkon.ts')
 }

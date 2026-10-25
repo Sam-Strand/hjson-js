@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import Hjson from '../src/index.js'
+import mkon from '../src/index.js'
 
 /**
  * Тесты опции quoteChar (и её алиаса singleQuote).
@@ -117,7 +117,7 @@ const cases = [
 describe('stringify: опция quoteChar / singleQuote', () => {
     for (const [name, data, opt, expected] of cases) {
         test(name, () => {
-            const output = Hjson.stringify(data, opt)
+            const output = mkon.stringify(data, opt)
             expect(output).toBe(expected)
         })
     }
@@ -125,7 +125,7 @@ describe('stringify: опция quoteChar / singleQuote', () => {
 
 describe('stringify: дефолт не изменился', () => {
     test('без опции quoteChar экранируется только "', () => {
-        const out = Hjson.stringify(
+        const out = mkon.stringify(
             { a: "this's", b: 'say "hi"' },
             { quotes: 'strings' },
         )

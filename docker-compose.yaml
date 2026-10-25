@@ -1,8 +1,8 @@
 services:
-    hjson:
+    mkon:
         build: .
         volumes:
-            - .:/hjson
-        working_dir: /hjson
+            - .:/mkon
+        working_dir: /mkon
         stdin_open: true
         tty: true

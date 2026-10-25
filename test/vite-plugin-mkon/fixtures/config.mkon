@@ -1,5 +1,5 @@
 {
-  // комментарий разрешён в hjson
+  // комментарий разрешён в mkon
   server: {
     host: localhost
     port: 3000

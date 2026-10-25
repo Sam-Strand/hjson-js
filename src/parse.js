@@ -141,7 +141,7 @@ export default function parse(source, opt) {
     }
 
     function keyname() {
-        // quotes for keys are optional in Hjson
+        // quotes for keys are optional in mkon
         // unless they include {}[],: or whitespace.
 
         if (ch === '"' || ch === "'") return string(false)
@@ -168,7 +168,7 @@ export default function parse(source, opt) {
         while (ch) {
             // Skip whitespace.
             while (ch && ch <= ' ') next()
-            // Hjson allows comments
+            // mkon allows comments
             if (ch === '#' || ch === '/' && peek(0) === '/') {
                 while (ch && ch !== '\n') next()
             } else if (ch === '/' && peek(0) === '*') {
@@ -180,7 +180,7 @@ export default function parse(source, opt) {
     }
 
     function tfnns(inContainer) {
-        // Hjson strings can be quoteless
+        // mkon strings can be quoteless
         // returns string, true, false, or null.
         //
         // Inside a container (array / object, including the braceless root object)
@@ -319,7 +319,7 @@ export default function parse(source, opt) {
                 array.push(value(true))
                 cAt = at
                 white()
-                // in Hjson the comma is optional and trailing commas are allowed
+                // in mkon the comma is optional and trailing commas are allowed
                 // note that we do not keep comments before the , if there are any
                 if (ch === ',') { next(); cAt = at; white(); }
                 if (comments) {
@@ -379,7 +379,7 @@ export default function parse(source, opt) {
                 object[key] = value(true)
                 cAt = at
                 white()
-                // in Hjson the comma is optional and trailing commas are allowed
+                // in mkon the comma is optional and trailing commas are allowed
                 // note that we do not keep comments before the , if there are any
                 if (ch === ',') { next(); cAt = at; white(); }
                 if (comments) {
@@ -405,7 +405,7 @@ export default function parse(source, opt) {
     }
 
     function value(inContainer) {
-        // Parse a Hjson value. It could be an object, an array, a string, a number or a word.
+        // Parse a mkon value. It could be an object, an array, a string, a number or a word.
 
         white()
         switch (ch) {

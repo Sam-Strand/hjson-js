@@ -3,7 +3,7 @@ import parse from './parse.js'
 import stringify from './stringify.js'
 import standardDsf from './dsf.js'
 
-const Hjson = {
+const mkon = {
     parse,
     stringify,
 
@@ -36,4 +36,4 @@ export {
     standardDsf as dsf
 }
 
-export default Hjson
+export default mkon

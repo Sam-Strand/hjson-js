@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import Hjson from '../src/index.js'
+import mkon from '../src/index.js'
 
 /**
  * Round-trip: текст → parse → stringify → текст.
@@ -38,8 +38,8 @@ const cases = [
 describe('rt: text → parse → stringify → text', () => {
     for (const [name, input, expected] of cases) {
         test(name, () => {
-            const data = Hjson.rt.parse(input)
-            const output = Hjson.rt.stringify(data)
+            const data = mkon.rt.parse(input)
+            const output = mkon.rt.stringify(data)
             expect(output).toBe(expected)
         })
     }
@@ -48,11 +48,11 @@ describe('rt: text → parse → stringify → text', () => {
 describe('rt idempotent: parse → stringify → parse → stringify', () => {
     for (const [name, input] of cases) {
         test(name, () => {
-            const data1 = Hjson.rt.parse(input)
-            const text1 = Hjson.rt.stringify(data1)
+            const data1 = mkon.rt.parse(input)
+            const text1 = mkon.rt.stringify(data1)
 
-            const data2 = Hjson.rt.parse(text1)
-            const text2 = Hjson.rt.stringify(data2)
+            const data2 = mkon.rt.parse(text1)
+            const text2 = mkon.rt.stringify(data2)
 
             expect(text2).toBe(text1)
             expect(data2).toEqual(data1)

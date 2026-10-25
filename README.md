@@ -1,27 +1,27 @@
-# Hjson
+# mkon
 
-**Hjson** — это Human JSON: расширение JSON, ориентированное на людей. Тот же JSON, но с комментариями, без обязательных кавычек у ключей, без запятых, с multiline-строками и терпимостью к мелочам вроде висячих запятых. Парсится в обычные JS-значения, сериализуется обратно в Hjson.
+**mkon** — это Human JSON: расширение JSON, ориентированное на людей. Тот же JSON, но с комментариями, без обязательных кавычек у ключей, без запятых, с multiline-строками и терпимостью к мелочам вроде висячих запятых. Парсится в обычные JS-значения, сериализуется обратно в mkon.
 
-Этот пакет — **парсер и стрингфаер Hjson** с опциональной возможностью подключить Vite-плагин для импорта `.hjson` файлов прямо в сборку.
+Этот пакет — **парсер и стрингфаер mkon** с опциональной возможностью подключить Vite-плагин для импорта `.mkon` файлов прямо в сборку.
 
-## Зачем Hjson
+## Зачем mkon
 
-- **Конфиги, которые читает человек.** JSON для машин, Hjson для людей: комментарии, свобода форматирования, никаких лишних кавычек и запятых.
-- **Обратная совместимость с JSON.** Любой валидный JSON — валидный Hjson.
+- **Конфиги, которые читает человек.** JSON для машин, mkon для людей: комментарии, свобода форматирования, никаких лишних кавычек и запятых.
+- **Обратная совместимость с JSON.** Любой валидный JSON — валидный mkon.
 - **Комментарии.** `#`, `//`, `/* */` — сохраняются через `keepWsc` и доступны через `getComment()`.
 - **Multiline-строки.** `'''...'''` для длинных текстов без экранирования.
 - **Quoteless-строки.** Значения можно писать без кавычек, включая кастомные форматы через `dsf`.
 
 ### Где заканчивается quoteless-строка
 
-> ⚠️ Отличие от оригинального Hjson: там quoteless-строка всегда тянется до конца строки, вместе с `,`, `}` и `]`.
+> ⚠️ Отличие от оригинального mkon: там quoteless-строка всегда тянется до конца строки, вместе с `,`, `}` и `]`.
 
 Внутри `[...]`, `{...}` и корневого объекта без скобок quoteless-строка заканчивается:
 
 - на конце строки;
 - на `,`, `}` или `]`, если они не внутри скобок, открытых в самом значении.
 
-```hjson
+```mkon
 { html: ⊄, latex: \not\subset, aliases: [notsub, notsubset] }
 // → { html: "⊄", latex: "\\not\\subset", aliases: ["notsub", "notsubset"] }
 
@@ -40,11 +40,11 @@
 ## Базовое использование
 
 ```js
-import { parse, stringify } from 'hjson'
+import { parse, stringify } from 'mkon'
 
 const data = parse(`
   # комментарий
-  name: hjson
+  name: mkon
   version: 3.0
   features: [
     human-friendly
@@ -110,16 +110,16 @@ const text = stringify(data, { space: 2, quotes: 'min' })
 
 ## Vite-плагин (опционально)
 
-Плагин позволяет импортировать `.hjson` файлы напрямую в Vite-сборку. Это **дополнение** к парсеру, а не его замена: сам Hjson-функционал живёт в `parse`/`stringify`, плагин лишь встраивает чтение `.hjson` в бандлер с query-параметрами для трансформации.
+Плагин позволяет импортировать `.mkon` файлы напрямую в Vite-сборку. Это **дополнение** к парсеру, а не его замена: сам mkon-функционал живёт в `parse`/`stringify`, плагин лишь встраивает чтение `.mkon` в бандлер с query-параметрами для трансформации.
 
 ### Подключение
 
 ```js
-import hjson from './vite-plugin-hjson.js'
+import mkon from './vite-plugin-mkon.js'
 
 export default {
     plugins: [
-        hjson({
+        mkon({
             handlers: {
                 // именованные обработчики
             },
@@ -132,11 +132,11 @@ export default {
 ### Использование
 
 ```js
-import data from './file.hjson'
-import config from './file.hjson?as=config'
-import picked from './file.hjson?pick=a.b,c.d'
-import omitted from './file.hjson?omit=a.b,c.d'
-import combined from './file.hjson?as=config&pick=a.b,c&omit=d'
+import data from './file.mkon'
+import config from './file.mkon?as=config'
+import picked from './file.mkon?pick=a.b,c.d'
+import omitted from './file.mkon?omit=a.b,c.d'
+import combined from './file.mkon?as=config&pick=a.b,c&omit=d'
 ```
 
 ### Query-параметры
@@ -155,14 +155,14 @@ import combined from './file.hjson?as=config&pick=a.b,c&omit=d'
 |-------|-----|--------------|----------|
 | `handlers` | `Record<string, Function>` | `{}` | Именованные обработчики значения до применения `pick`/`omit`. Сигнатура: `(value, params, { file, ctx }) => any`. |
 | `default` | `string \| null` | `null` | Имя handler'а по умолчанию, если в import не указан `?as=...`. |
-| `dts` | `boolean` | `true` | Генерировать типы для импортов `.hjson` (см. ниже). |
+| `dts` | `boolean` | `true` | Генерировать типы для импортов `.mkon` (см. ниже). |
 
 ### Типы для TypeScript
 
-Рядом с каждым `file.hjson` плагин пишет `file.d.hjson.ts` с типом значения, которое даёт импорт **без query** (с учётом `default`-handler'а):
+Рядом с каждым `file.mkon` плагин пишет `file.d.mkon.ts` с типом значения, которое даёт импорт **без query** (с учётом `default`-handler'а):
 
 ```ts
-// config.d.hjson.ts — сгенерировано
+// config.d.mkon.ts — сгенерировано
 declare const value: {
     server: {
         host: string
@@ -178,18 +178,18 @@ export default value
 { "compilerOptions": { "allowArbitraryExtensions": true } }
 ```
 
-Объявление пишется (и обновляется) при каждом импорте файла — в `vite build` и `vite dev`; в dev-режиме ещё и при изменении `.hjson`. Файлы, которые никто не импортирует, плагин не трогает. Поэтому для нового `.hjson` объявление появится после первого запуска сборки или dev-сервера. Типы расширяются как у JSON-импортов: `'a'` → `string`. Объекты в массивах сливаются, ключи, которые есть не у всех элементов, становятся необязательными.
+Объявление пишется (и обновляется) при каждом импорте файла — в `vite build` и `vite dev`; в dev-режиме ещё и при изменении `.mkon`. Файлы, которые никто не импортирует, плагин не трогает. Поэтому для нового `.mkon` объявление появится после первого запуска сборки или dev-сервера. Типы расширяются как у JSON-импортов: `'a'` → `string`. Объекты в массивах сливаются, ключи, которые есть не у всех элементов, становятся необязательными.
 
-Импорты с query (`?pick=`, `?as=`, `?omit=`) так не типизируются: TypeScript не умеет сопоставить модулю с query отдельный файл объявления. Для них по-прежнему нужно `declare module '*.hjson?*'` или явное приведение типа.
+Импорты с query (`?pick=`, `?as=`, `?omit=`) так не типизируются: TypeScript не умеет сопоставить модулю с query отдельный файл объявления. Для них по-прежнему нужно `declare module '*.mkon?*'` или явное приведение типа.
 
 ### Обработка ошибок
 
-- Неизвестный handler — `this.error('[hjson] unknown handler "..." in <file>')`.
-- Путь не найден при `pick` — `this.error('[hjson] path "..." not found in <file>')`.
+- Неизвестный handler — `this.error('[mkon] unknown handler "..." in <file>')`.
+- Путь не найден при `pick` — `this.error('[mkon] path "..." not found in <file>')`.
 
 ### Ограничения плагина
 
 - Значения сериализуются через `JSON.stringify`, поэтому функции, `undefined`, `Symbol`, `BigInt` и циклические ссылки не поддерживаются.
 - `omit` делает глубокую копию через `JSON.parse(JSON.stringify(...))` — теряются типы, не представимые в JSON.
 - Плагин читает файл синхронно (`fs.readFileSync`).
-- `enforce: 'pre'` — обработка `.hjson` происходит раньше других плагинов Vite.
+- `enforce: 'pre'` — обработка `.mkon` происходит раньше других плагинов Vite.

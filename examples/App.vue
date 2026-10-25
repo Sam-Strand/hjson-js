@@ -1,16 +1,16 @@
 <template>
-    <h1>Hjson ↔ JSON</h1>
-    <!-- ярус 1: Hjson → JS → JSON -->
+    <h1>mkon ↔ JSON</h1>
+    <!-- ярус 1: mkon → JS → JSON -->
     <div class="row">
         <div class="pane">
-            <h2>Hjson (ввод)</h2>
-            <textarea v-model="hjsonIn" @input="fromHjson" spellcheck="false"></textarea>
+            <h2>mkon (ввод)</h2>
+            <textarea v-model="mkonIn" @input="frommkon" spellcheck="false"></textarea>
         </div>
         <div class="pane">
             <h2>JS представление</h2>
             <div class="tree">
-                <TreeNode v-if="!hjsonError" :value="hjsonValue" />
-                <div v-else class="error">{{ hjsonError }}</div>
+                <TreeNode v-if="!mkonError" :value="mkonValue" />
+                <div v-else class="error">{{ mkonError }}</div>
             </div>
         </div>
         <div class="pane">
@@ -19,9 +19,9 @@
         </div>
     </div>
 
-    <OptionsPanel v-model="opt" @update:model-value="fromHjson(); fromJson()" />
+    <OptionsPanel v-model="opt" @update:model-value="frommkon(); fromJson()" />
 
-    <!-- ярус 2: JSON → JS → Hjson -->
+    <!-- ярус 2: JSON → JS → mkon -->
     <div class="row">
         <div class="pane">
             <h2>JSON (ввод)</h2>
@@ -35,18 +35,18 @@
             </div>
         </div>
         <div class="pane">
-            <h2>Hjson (результат)</h2>
-            <textarea :value="hjsonOut" readonly spellcheck="false"></textarea>
+            <h2>mkon (результат)</h2>
+            <textarea :value="mkonOut" readonly spellcheck="false"></textarea>
         </div>
     </div>
 </template>
 <script setup>
 import { ref } from 'vue'
-import Hjson from 'hjson'
+import mkon from 'mkon'
 import TreeNode from './TreeNode.vue'
 import OptionsPanel from './OptionsPanel.vue'
 
-import hjson_str from './test.hjson?raw'
+import mkon_str from './test.mkon?raw'
 
 const opt = ref({
     quotes: 'min',
@@ -63,28 +63,28 @@ const opt = ref({
     colors: false,
 })
 
-// ---------- ярус 1: Hjson → JS → JSON ----------
-const hjsonIn = ref(hjson_str)
-const hjsonValue = ref(null)
+// ---------- ярус 1: mkon → JS → JSON ----------
+const mkonIn = ref(mkon_str)
+const mkonValue = ref(null)
 const jsonOut = ref('')
-const hjsonError = ref('')
+const mkonError = ref('')
 
-function fromHjson() {
-    hjsonError.value = ''
+function frommkon() {
+    mkonError.value = ''
     try {
-        const v = Hjson.parse(hjsonIn.value)
-        hjsonValue.value = v
+        const v = mkon.parse(mkonIn.value)
+        mkonValue.value = v
         jsonOut.value = JSON.stringify(v, null, 2)
     } catch (e) {
-        hjsonError.value = String(e.message || e)
+        mkonError.value = String(e.message || e)
         jsonOut.value = ''
     }
 }
 
-// ---------- ярус 2: JSON → JS → Hjson ----------
-const jsonIn = ref(JSON.stringify(Hjson.parse(hjson_str), null, 2))
+// ---------- ярус 2: JSON → JS → mkon ----------
+const jsonIn = ref(JSON.stringify(mkon.parse(mkon_str), null, 2))
 const jsonValue = ref(null)
-const hjsonOut = ref('')
+const mkonOut = ref('')
 const jsonError = ref('')
 
 function fromJson() {
@@ -92,13 +92,13 @@ function fromJson() {
     try {
         const v = JSON.parse(jsonIn.value)
         jsonValue.value = v
-        hjsonOut.value = Hjson.stringify(v, opt.value)
+        mkonOut.value = mkon.stringify(v, opt.value)
     } catch (e) {
         jsonError.value = String(e.message || e)
-        hjsonOut.value = ''
+        mkonOut.value = ''
     }
 }
 // начальный прогон
-fromHjson()
+frommkon()
 fromJson()
 </script>

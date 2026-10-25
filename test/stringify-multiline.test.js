@@ -1,8 +1,8 @@
 // test/stringify-multiline.test.js
 import { describe, it, expect } from 'vitest'
-import hjson from '../src/index.js'
+import mkon from '../src/index.js'
 
-// Конфиг из issue (расширения hjson-vsc)
+// Конфиг из issue (расширения mkon-vsc)
 const baseOpt = {
     condense: 0,
     bracesSameLine: false,
@@ -21,7 +21,7 @@ const baseOpt = {
  * Парсит и один раз сериализует.
  */
 function roundTripOnce(input, opt = baseOpt) {
-    return hjson.rt.stringify(hjson.rt.parse(input, opt), opt)
+    return mkon.rt.stringify(mkon.rt.parse(input, opt), opt)
 }
 
 /**
@@ -39,7 +39,7 @@ function expectStable(input, iterations = 5, opt = baseOpt) {
     return current
 }
 
-describe('hjson stringify — multiline strings', () => {
+describe('mkon stringify — multiline strings', () => {
     // ------------------------------------------------------------------
     // Регресс из issue
     // ------------------------------------------------------------------
@@ -381,7 +381,7 @@ describe('hjson stringify — multiline strings', () => {
 ]
 `
             // так парсить нельзя — проверим, что падает ожидаемо
-            expect(() => hjson.rt.parse(input, baseOpt)).toThrow()
+            expect(() => mkon.rt.parse(input, baseOpt)).toThrow()
         })
 
         it('содержимое с одним переводом строки в конце', () => {

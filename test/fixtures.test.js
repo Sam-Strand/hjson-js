@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest'
 import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import Hjson from '../src/index.js'
+import mkon from '../src/index.js'
 
 const rootDir = fileURLToPath(new URL('./assets/', import.meta.url))
 
@@ -16,20 +16,20 @@ function load(file) {
 }
 
 function loadMeta(name) {
-    const file = join(rootDir, `${name}_testmeta.hjson`)
+    const file = join(rootDir, `${name}_testmeta.mkon`)
 
     if (!existsSync(file)) {
         return defaultOptions
     }
 
-    return Hjson.parse(readFileSync(file, 'utf8'))
+    return mkon.parse(readFileSync(file, 'utf8'))
 }
 
 const tests = readFileSync(join(rootDir, 'testlist.txt'), 'utf8')
     .split('\n')
     .filter(Boolean)
 
-describe('Hjson fixtures', () => {
+describe('mkon fixtures', () => {
     for (const file of tests) {
         const parts = file.split('_test.')
 
@@ -44,17 +44,17 @@ describe('Hjson fixtures', () => {
                 const shouldFail = name.startsWith('fail')
                 const meta = loadMeta(name)
 
-                Hjson.setEndOfLine('\n')
+                mkon.setEndOfLine('\n')
 
                 if (shouldFail) {
-                    expect(() => Hjson.parse(text)).toThrow()
+                    expect(() => mkon.parse(text)).toThrow()
                     return
                 }
 
-                const data = Hjson.parse(text)
+                const data = mkon.parse(text)
 
                 const jsonFromData = JSON.stringify(data, null, 2)
-                const hjsonFromData = Hjson.stringify(data, meta.options)
+                const mkonFromData = mkon.stringify(data, meta.options)
 
                 const jsonResultRaw = load(`${name}_result.json`)
                 const jsonResult = JSON.stringify(
@@ -63,10 +63,10 @@ describe('Hjson fixtures', () => {
                     2
                 )
 
-                const hjsonResult = load(`${name}_result.hjson`)
+                const mkonResult = load(`${name}_result.mkon`)
 
                 expect(jsonFromData).toBe(jsonResult)
-                expect(hjsonFromData).toBe(hjsonResult)
+                expect(mkonFromData).toBe(mkonResult)
 
                 expect(jsonResultRaw).toBe(jsonResult)
 

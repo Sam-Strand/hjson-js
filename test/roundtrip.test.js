@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import Hjson from '../src/index.js'
+import mkon from '../src/index.js'
 
 // ---------------------------------------------------------------------------
 // Общие опции round-trip.
@@ -13,7 +13,7 @@ const rtOpts = {
 
 /** parse → stringify с нашими опциями. */
 function rt(source, opts = rtOpts) {
-    return Hjson.rt.stringify(Hjson.rt.parse(source), opts)
+    return mkon.rt.stringify(mkon.rt.parse(source), opts)
 }
 
 /** parse → stringify → parse → stringify: текст не должен меняться. */
