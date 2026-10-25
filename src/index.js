@@ -1,7 +1,6 @@
 import { EOL, setEndOfLine } from './common.js'
 import parse from './parse.js'
 import stringify from './stringify.js'
-import standardDsf from './dsf.js'
 
 const mkon = {
     parse,
@@ -25,15 +24,13 @@ const mkon = {
             options.keepWsc = true
             return stringify(value, options)
         }
-    },
-    dsf: standardDsf
+    }
 }
 
 export {
     parse,
     stringify,
-    EOL,
-    standardDsf as dsf
+    EOL
 }
 
 export default mkon

@@ -1,4 +1,4 @@
-# comments are treated like whitespace - they are not parsed
+// comments are treated like whitespace - they are not parsed
 hello:       Hello Human!
 // js style comment
 
@@ -7,27 +7,27 @@ multiline comment
 multiline comment
 */
 
-# text
+// text
 text:        This is a valid string value.
 quote:       "You need quotes\tfor escapes"
 otherwise:   <div class="cool">life without escapes is bliss!</div>
 
-# keys
+// keys
 abc-123:      no quotes for keys
 
-# comma
+// comma
 commas:      "can be omitted at the end of the line"
-but:         [ 1, 2, 3 ] # not between elements on the same line
-trailing:    [ 1, 2, 3, ] # a trailing comma is OK
+but:         [ 1, 2, 3 ] // not between elements on the same line
+trailing:    [ 1, 2, 3, ] // a trailing comma is OK
 
-# multiline string
+// multiline string
 multiline:
   '''
   first line
     indented line
   third line
   '''
-# numbers, keywords and arrays work just like in JSON
+// numbers, keywords and arrays work just like in JSON
 number:      5
 negative:    -4.2
 yes:         true

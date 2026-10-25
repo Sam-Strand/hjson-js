@@ -1,5 +1,5 @@
 {
-  # simple
+  // simple
 
   text1:        This is a valid string value.
   text2:a \ is just a \
@@ -15,7 +15,7 @@
   notml3: "\n  \n  \n  \n"
   notml4: "\t\n"
 
-  # multiline string
+  // multiline string
 
   multiline1:
     '''
@@ -35,9 +35,9 @@
       indented line
     last line
 
-    ''' # trailing lf
+    ''' // trailing lf
 
-  # escapes/no escape
+  // escapes/no escape
 
   foo1a: asdf\"'a\s\w
   foo1b: '''asdf\"'a\s\w'''
@@ -52,7 +52,7 @@
   foo4a: "asdf'''\nasdf"
   foo4b: "asdf\n'''asdf"
 
-  # in arrays
+  // in arrays
   arr:
   [
     one
@@ -61,7 +61,7 @@
     '''four'''
   ]
 
-  # not strings
+  // not strings
   not:
   {
     number:      5
@@ -72,7 +72,7 @@
     array:       [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, -1, 0.5 ]
   }
 
-  # special quoted
+  // special quoted
   special:
   {
     true: "true"

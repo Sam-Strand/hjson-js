@@ -1,5 +1,5 @@
 {
-  # the comma forces a whitespace check
+  // the comma forces a whitespace check
   numbers:
   [
     0

@@ -12,7 +12,8 @@ const INDENT = '    '
 
 /** @param {unknown} value */
 function isPlainObject(value) {
-    return value !== null && typeof value === 'object' && !Array.isArray(value)
+    return value !== null && typeof value === 'object' && !Array.isArray(value) &&
+        Object.prototype.toString.call(value) !== '[object Date]'
 }
 
 /** @param {string} key */
@@ -75,6 +76,7 @@ function unionType(values, indent) {
  */
 export function typeOf(value, indent = '') {
     if (value === null) return 'null'
+    if (Object.prototype.toString.call(value) === '[object Date]') return 'Date'
     if (Array.isArray(value)) {
         if (value.length === 0) return 'unknown[]'
         const element = unionType(value, indent)

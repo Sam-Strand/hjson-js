@@ -1,5 +1,5 @@
 {
-  # Hjson 3 allows the use of single quotes
+  // Hjson 3 allows the use of single quotes
 
   'key1': a key in single quotes
   'key 2': a key in single quotes
@@ -26,7 +26,7 @@
     '\t\n'
   ]
 
-  # escapes/no escape
+  // escapes/no escape
 
   foo3a: 'asdf\'\'\''
   foo3b: '\'\'\'asdf'

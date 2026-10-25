@@ -3,6 +3,43 @@ import path from 'node:path'
 import parse from './parse.js'
 import { declarationFor, declarationPath } from './mkon-types.js'
 
+/**
+ * Сериализует значение в JS-литерал для `export default ...`.
+ * То же, что JSON.stringify, но NaN, Infinity, -Infinity и -0
+ * остаются числами (JSON.stringify превратил бы их в null / 0),
+ * а Date остаётся Date (JSON.stringify превратил бы её в строку).
+ *
+ * @param {any} value
+ * @returns {string}
+ */
+export function toJsLiteral(value) {
+    if (typeof value === 'number') {
+        if (Number.isNaN(value)) return 'NaN'
+        if (value === Infinity) return 'Infinity'
+        if (value === -Infinity) return '-Infinity'
+        if (value === 0 && 1 / value < 0) return '-0'
+        return String(value)
+    }
+    if (Object.prototype.toString.call(value) === '[object Date]') {
+        const t = value.getTime()
+        return Number.isNaN(t) ? 'new Date(NaN)' : `new Date(${JSON.stringify(value.toISOString())})`
+    }
+    if (value === null || typeof value !== 'object' || typeof value.toJSON === 'function') {
+        const json = JSON.stringify(value)
+        return json === undefined ? 'undefined' : json
+    }
+    if (Array.isArray(value)) {
+        return '[' + value.map(v => (v === undefined || typeof v === 'function' ? 'null' : toJsLiteral(v))).join(',') + ']'
+    }
+    const parts = []
+    for (const key of Object.keys(value)) {
+        const v = value[key]
+        if (v === undefined || typeof v === 'function') continue
+        parts.push(JSON.stringify(key) + ':' + toJsLiteral(v))
+    }
+    return '{' + parts.join(',') + '}'
+}
+
 
 /**
  * Выбирает значения по списку путей из объекта.
@@ -203,7 +240,7 @@ export default function mkon(options = {}) {
             }
 
             return {
-                code: `export default ${JSON.stringify(loaded.value)};`,
+                code: `export default ${toJsLiteral(loaded.value)};`,
                 map: null,
             }
         },

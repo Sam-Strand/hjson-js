@@ -1,5 +1,4 @@
-import { loadDsf } from './dsf.js'
-import { createComment, getComment, tryParseNumber } from './common.js'
+import { createComment, getComment, tryParseNumber, parseSpecialNumber, parseIsoDate } from './common.js'
 
 export default function parse(source, opt) {
     var text
@@ -18,7 +17,6 @@ export default function parse(source, opt) {
     }
 
     var keepComments
-    var runDsf // domain specific formats
 
     function resetAt() {
         at = 0
@@ -168,8 +166,8 @@ export default function parse(source, opt) {
         while (ch) {
             // Skip whitespace.
             while (ch && ch <= ' ') next()
-            // mkon allows comments
-            if (ch === '#' || ch === '/' && peek(0) === '/') {
+            // mkon allows JS-style comments only: // and /* */
+            if (ch === '/' && peek(0) === '/') {
                 while (ch && ch !== '\n') next()
             } else if (ch === '/' && peek(0) === '*') {
                 next(); next()
@@ -181,7 +179,7 @@ export default function parse(source, opt) {
 
     function tfnns(inContainer) {
         // mkon strings can be quoteless
-        // returns string, true, false, or null.
+        // returns string, number (incl. NaN / ±Infinity), Date (ISO 8601), true, false, or null.
         //
         // Inside a container (array / object, including the braceless root object)
         // a quoteless string ends at the first ',', '}' or ']' that is not inside
@@ -203,28 +201,40 @@ export default function parse(source, opt) {
             var endsString = isEol || inContainer && isSep && depth === 0
             if (endsString ||
                 isSep ||
-                ch === '#' ||
                 ch === '/' && (peek(0) === '/' || peek(0) === '*')
             ) {
-                // this tests for the case of {true|false|null|num}
-                // followed by { ',' | '}' | ']' | '#' | '//' | '/*' }
+                // this tests for the case of {true|false|null|num|NaN|±Infinity|ISO date}
+                // followed by { ',' | '}' | ']' | '//' | '/*' }
                 // which needs to be parsed as the specified value
                 var chf = value[0]
                 switch (chf) {
                     case 'f': if (value.trim() === "false") return false; break
                     case 'n': if (value.trim() === "null") return null; break
                     case 't': if (value.trim() === "true") return true; break
+                    case 'N':
+                    case 'I':
+                    case '+':
+                        var sp = parseSpecialNumber(value.trim())
+                        if (sp !== undefined) return sp
+                        break
                     default:
                         if (chf === '-' || chf >= '0' && chf <= '9') {
                             var n = tryParseNumber(value)
                             if (n !== undefined) return n
+                            if (chf !== '-') {
+                                var dt
+                                try { dt = parseIsoDate(value.trim()) } catch (e) { error(e.message) }
+                                if (dt !== undefined) return dt
+                            }
+                            if (chf === '-') {
+                                var sn = parseSpecialNumber(value.trim())
+                                if (sn !== undefined) return sn
+                            }
                         }
                 }
                 if (endsString) {
                     // remove any whitespace at the end (ignored in quoteless strings)
-                    value = value.trim()
-                    var dsfValue = runDsf(value)
-                    return dsfValue !== undefined ? dsfValue : value
+                    return value.trim()
                 }
             }
             if (ch === '{' || ch === '[') depth++
@@ -453,6 +463,16 @@ export default function parse(source, opt) {
 
         var state = saveState()
 
+        // A bare ISO date-time at the root ("2024-01-15T10:30Z") contains ':'
+        // and would otherwise be read as a braceless object { "2024-01-15T10": "30Z" }.
+        if (/^\d{4}-\d{2}-\d{2}T\d{2}:/.test(text.substr(at - 1, 14))) {
+            try {
+                var dt = value()
+                if (dt instanceof Date) return checkTrailing(dt, c)
+            } catch (e) { }
+            restoreState(state)
+        }
+
         try {
             return checkTrailing(object(true), c)
         } catch (e) {
@@ -463,13 +483,10 @@ export default function parse(source, opt) {
 
     if (typeof source !== "string") throw new Error("source is not a string")
 
-    let dsfDef = null
-
     if (opt && typeof opt === 'object') {
+        if (opt.dsf != null) throw new Error("The 'dsf' option was removed: mkon has no format plugins (NaN/Infinity and ISO dates are built in)")
         keepComments = opt.keepWsc
-        dsfDef = opt.dsf
     }
-    runDsf = loadDsf(dsfDef, "parse")
     text = source
     resetAt()
     return rootValue()

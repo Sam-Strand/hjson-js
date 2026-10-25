@@ -40,6 +40,20 @@ function runExpectError(file, opts) {
 }
 
 describe('vite-plugin-mkon', () => {
+    describe('специальные числа', () => {
+        test('NaN / Infinity / -0 остаются числами в модуле', () => {
+            expect(runRaw('special.mkon')).toBe(
+                'export default {"nan":NaN,"inf":Infinity,"ninf":-Infinity,"nzero":-0,"str":"NaN","list":[1,NaN,-Infinity]};'
+            )
+            const v = run('special.mkon')
+            expect(v.nan).toBeNaN()
+            expect(v.inf).toBe(Infinity)
+            expect(v.ninf).toBe(-Infinity)
+            expect(Object.is(v.nzero, -0)).toBe(true)
+            expect(v.str).toBe('NaN')
+        })
+    })
+
     describe('базовый парсинг', () => {
         test('парсит простой mkon', () => {
             expect(runRaw('basic.mkon')).toBe(

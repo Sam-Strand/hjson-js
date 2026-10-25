@@ -1,19 +1,21 @@
 // test
-# all
+// all
 // comment
 /*
 styles
 */
-# with lf
+// with lf
 
 
 
-# !
+// !
 
 {
-  # hjson style comment
+  // "#" is not a comment in mkon, it is part of the value:
+  hash1: #fff
+  hash2: a # b
   foo1: This is a string value. # part of the string
-  foo2: "This is a string value." # a comment
+  foo2: "This is a string value." // a comment
 
   // js style comment
   bar1: This is a string value. // part of the string
@@ -26,19 +28,19 @@ styles
   rem2: "// test"
   rem3: "/* test */"
 
-  num1: 0 # comment
+  num1: 0 // comment
   num2: 0.0 // comment
   num3: 2 /* comment */
 
-  true1: true # comment
+  true1: true // comment
   true2: true // comment
   true3: true /* comment */
 
-  false1: false # comment
+  false1: false // comment
   false2: false // comment
   false3: false /* comment */
 
-  null1: null # comment
+  null1: null // comment
   null2: null // comment
   null3: null /* comment */
 
@@ -46,7 +48,7 @@ styles
   str2: 00.0 // part of the string
   str3: 02 /* part of the string */
 
-  # this causes problems with the syntax definitions for some editors:
+  // this causes problems with the syntax definitions for some editors:
   URL1: "http://example.com",
   "URL2": "http://example.com",
   URL3: http://example.com

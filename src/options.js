@@ -15,7 +15,6 @@ import { EOL } from './common.js'
  * @property {'"' | "'"} [quoteChar]            Символ кавычек. По умолчанию `'"'`.
  * @property {number} [condense]                Порог схлопывания. По умолчанию `0` (выкл.).
  * @property {'std' | 'no-tabs' | 'off'} [multiline]  Режим multiline-строк. По умолчанию `'std'`.
- * @property {object | null} [dsf]              Domain Specific Formats. По умолчанию `null`.
  * @property {boolean} [sortProps]              Сортировать ключи. По умолчанию `false`.
  * @property {boolean} [colors]                 ANSI-раскраска. По умолчанию `false`.
  */
@@ -36,7 +35,6 @@ import { EOL } from './common.js'
  * @property {number} condense
  * @property {0 | 1 | 2} multiline
  * @property {'' | ','} separator
- * @property {object | null} dsf
  * @property {boolean} sortProps
  * @property {boolean} colors
  */
@@ -130,7 +128,6 @@ export function normalizeOptions(opt) {
         condense: o.condense || 0,
         multiline,
         separator: separatorOn ? ',' : '',
-        dsf: o.dsf || null,
         sortProps: o.sortProps === true,
         colors: o.colors === true,
     }

@@ -17,32 +17,32 @@ const cases = [
     // ---- комментарий перед ключом (в объекте) ----
     [
         'перед ключом',
-        '{\n  # hello\n  a: 1\n}\n',
-        '{\n  # hello\n  a: 1\n}\n',
+        '{\n  // hello\n  a: 1\n}\n',
+        '{\n  // hello\n  a: 1\n}\n',
     ],
     // ---- комментарий после значения (в объекте) ----
     [
         'после значения',
-        '{\n  a: 1 # hello\n}\n',
-        '{\n  a: 1 # hello\n}\n',
+        '{\n  a: 1 // hello\n}\n',
+        '{\n  a: 1 // hello\n}\n',
     ],
     // ---- комментарий перед элементом массива ----
     [
         'перед элементом массива',
-        '[\n  # hello\n  1\n]\n',
-        '[\n  # hello\n  1\n]\n',
+        '[\n  // hello\n  1\n]\n',
+        '[\n  // hello\n  1\n]\n',
     ],
     // ---- комментарий после элемента массива ----
     [
         'после элемента массива',
-        '[\n  1 # hello\n]\n',
-        '[\n  1 # hello\n]\n',
+        '[\n  1 // hello\n]\n',
+        '[\n  1 // hello\n]\n',
     ],
     // ---- корневой комментарий ----
     [
-        'корневой #',
-        '# header\na: 1\n',
-        '# header\n{\n  a: 1\n}\n',
+        'корневой //',
+        '// header\na: 1\n',
+        '// header\n{\n  a: 1\n}\n',
     ],
     [
         'корневой //',
@@ -57,26 +57,26 @@ const cases = [
     // ---- несколько подряд ----
     [
         'несколько ключей с комментариями',
-        '{\n  # first\n  a: 1\n  # second\n  b: 2\n}\n',
-        '{\n  # first\n  a: 1\n  # second\n  b: 2\n}\n',
+        '{\n  // first\n  a: 1\n  // second\n  b: 2\n}\n',
+        '{\n  // first\n  a: 1\n  // second\n  b: 2\n}\n',
     ],
     // ---- комментарий перед вложенным объектом ----
     [
         'перед вложенным',
-        '{\n  # sub\n  a: { b: 1 }\n}\n',
-        '{\n  # sub\n  a:\n  {\n    b: 1\n  }\n}\n',
+        '{\n  // sub\n  a: { b: 1 }\n}\n',
+        '{\n  // sub\n  a:\n  {\n    b: 1\n  }\n}\n',
     ],
     // ---- многострочный комментарий ----
     [
-        'многострочный #',
-        '{\n  # line1\n  # line2\n  a: 1\n}\n',
-        '{\n  # line1\n  # line2\n  a: 1\n}\n',
+        'многострочный //',
+        '{\n  // line1\n  // line2\n  a: 1\n}\n',
+        '{\n  // line1\n  // line2\n  a: 1\n}\n',
     ],
     // ---- в массиве объектов ----
     [
         'комментарий внутри объекта в массиве',
-        '[\n  {\n    # inner\n    a: 1\n  }\n]\n',
-        '[\n  {\n    # inner\n    a: 1\n  }\n]\n',
+        '[\n  {\n    // inner\n    a: 1\n  }\n]\n',
+        '[\n  {\n    // inner\n    a: 1\n  }\n]\n',
     ],
 ]
 
@@ -159,58 +159,58 @@ describe('rt comments idempotent: комментарии не гуляют', () 
 
 describe('rt comments: нет лишних переводов строк', () => {
     test('комментарий после значения не добавляет пустую строку', () => {
-        const input = '{\n  a: 1 # hello\n}\n'
+        const input = '{\n  a: 1 // hello\n}\n'
         const output = mkon.rt.stringify(mkon.rt.parse(input))
         // ровно один \n после комментария, не два
-        expect(output).toBe('{\n  a: 1 # hello\n}\n')
-        expect(output).not.toMatch(/# hello\n\n/)
+        expect(output).toBe('{\n  a: 1 // hello\n}\n')
+        expect(output).not.toMatch(/\/\/ hello\n\n/)
     })
 
     test('корневой комментарий не добавляет пустую строку', () => {
-        const input = '# header\na: 1\n'
+        const input = '// header\na: 1\n'
         const output = mkon.rt.stringify(mkon.rt.parse(input))
-        expect(output).toBe('# header\n{\n  a: 1\n}\n')
-        expect(output).not.toMatch(/# header\n\n/)
+        expect(output).toBe('// header\n{\n  a: 1\n}\n')
+        expect(output).not.toMatch(/\/\/ header\n\n/)
     })
 
     test('комментарий перед ключом не добавляет пустую строку', () => {
-        const input = '{\n  # first\n  a: 1\n}\n'
+        const input = '{\n  // first\n  a: 1\n}\n'
         const output = mkon.rt.stringify(mkon.rt.parse(input))
-        expect(output).not.toMatch(/# first\n\n/)
+        expect(output).not.toMatch(/\/\/ first\n\n/)
     })
 })
 
 describe('rt comments: комментарий не съезжает на соседний узел', () => {
     test('комментарий перед ключом остаётся перед ним', () => {
-        const input = '{\n  # about a\n  a: 1\n  b: 2\n}\n'
+        const input = '{\n  // about a\n  a: 1\n  b: 2\n}\n'
         const output = mkon.rt.stringify(mkon.rt.parse(input))
-        expect(output).toMatch(/# about a\s+a: 1/)
+        expect(output).toMatch(/\/\/ about a\s+a: 1/)
         // и НЕ оказался у b
-        expect(output).not.toMatch(/# about a\s+b: 2/)
+        expect(output).not.toMatch(/\/\/ about a\s+b: 2/)
     })
 
     test('комментарий перед элементом массива остаётся перед ним', () => {
-        const input = '[\n  1\n  # about 2\n  2\n]\n'
+        const input = '[\n  1\n  // about 2\n  2\n]\n'
         const output = mkon.rt.stringify(mkon.rt.parse(input))
-        expect(output).toMatch(/# about 2\s+2/)
-        expect(output).not.toMatch(/# about 2\s+1/)
+        expect(output).toMatch(/\/\/ about 2\s+2/)
+        expect(output).not.toMatch(/\/\/ about 2\s+1/)
     })
 
     test('два комментария не склеиваются в один', () => {
-        const input = '{\n  # first\n  a: 1\n  # second\n  b: 2\n}\n'
+        const input = '{\n  // first\n  a: 1\n  // second\n  b: 2\n}\n'
         const output = mkon.rt.stringify(mkon.rt.parse(input))
-        expect(output).toContain('# first')
-        expect(output).toContain('# second')
-        expect(output.indexOf('# first')).toBeLessThan(output.indexOf('# second'))
+        expect(output).toContain('// first')
+        expect(output).toContain('// second')
+        expect(output.indexOf('// first')).toBeLessThan(output.indexOf('// second'))
     })
 })
 
 describe('rt comments: emitRootBraces=false не теряет корневой комментарий', () => {
     const cases = [
-        ['корневой #', '# header\na: 1\n', '# header\na: 1\n'],
+        ['корневой //', '// header\na: 1\n', '// header\na: 1\n'],
         ['корневой //', '// header\na: 1\n', '// header\na: 1\n'],
         ['корневой /* */', '/* header */\na: 1\n', '/* header */\na: 1\n'],
-        ['вложенный', '# header\na:\n{\n  b: 1\n}\n', '# header\na:\n{\n  b: 1\n}\n'],
+        ['вложенный', '// header\na:\n{\n  b: 1\n}\n', '// header\na:\n{\n  b: 1\n}\n'],
     ]
 
     for (const [name, input, expected] of cases) {

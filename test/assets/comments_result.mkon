@@ -1,11 +1,13 @@
 {
+  hash1: #fff
+  hash2: a # b
   foo1: This is a string value. # part of the string
   foo2: This is a string value.
   bar1: This is a string value. // part of the string
   bar2: This is a string value.
   foobar1: This is a string value./* part of the string */
   foobar2: This is a string value.
-  rem1: "# test"
+  rem1: # test
   rem2: "// test"
   rem3: "/* test */"
   num1: 0

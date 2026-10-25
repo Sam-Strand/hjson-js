@@ -1,0 +1,6 @@
+nan: NaN
+inf: Infinity
+ninf: -Infinity
+nzero: -0
+str: "NaN"
+list: [1, NaN, -Infinity]

@@ -1,5 +1,4 @@
-import { tryParseNumber, getComment, forceComment } from './common.js'
-import { loadDsf } from './dsf.js'
+import { tryParseNumber, getComment, forceComment, numberToString, isDate, dateToString, looksLikeIsoDate } from './common.js'
 import { normalizeOptions } from './options.js'
 
 // ============================================================================
@@ -18,7 +17,7 @@ const plainToken = {
     mstr: ["'''", "'''"],
     num: ['', ''],
     lit: ['', ''],
-    dsf: ['', ''],
+    date: ['', ''],
     esc: ['\\', ''],
     uni: ['\\u', ''],
     rem: ['', ''],
@@ -37,7 +36,7 @@ function makeColorToken() {
         mstr: ["\x1b[37;1m'''", "'''\x1b[0m"],
         num: ['\x1b[36;1m', '\x1b[0m'],
         lit: ['\x1b[36m', '\x1b[0m'],
-        dsf: ['\x1b[37m', '\x1b[0m'],
+        date: ['\x1b[36;1m', '\x1b[0m'],
         esc: ['\x1b[31m\\', '\x1b[0m'],
         uni: ['\x1b[31m\\u', '\x1b[0m'],
         rem: ['\x1b[35m', '\x1b[0m'],
@@ -59,10 +58,11 @@ export default function stringify(data, opt) {
     // ------------------------------------------------------------------
     // Options & tokens
     // ------------------------------------------------------------------
+    if (opt && opt.dsf != null) throw new Error("The 'dsf' option was removed: mkon has no format plugins (NaN/Infinity and ISO dates are built in)")
     const nopt = normalizeOptions(opt)
     const {
         eol, indent, keepComments, bracesSameLine, emitRootBraces,
-        quoteKeys, quoteChar, condense, separator, dsf, sortProps, colors,
+        quoteKeys, quoteChar, condense, separator, sortProps, colors,
     } = nopt
     let { quoteStrings, multiline } = nopt
     let token = colors === true ? makeColorToken() : plainToken
@@ -82,8 +82,6 @@ export default function stringify(data, opt) {
         token[k].push(plainToken[k][0].length, plainToken[k][1].length)
     }
 
-    const runDsf = loadDsf(dsf, 'stringify')
-
     // ------------------------------------------------------------------
     // Regexes / char tables
     // ------------------------------------------------------------------
@@ -92,7 +90,7 @@ export default function stringify(data, opt) {
     const quoteEsc = quoteChar === '"' ? '\\"' : "'"
     const needsEscape = new RegExp('[\\\\' + quoteEsc + '\x00-\x1f' + commonRange + ']', 'g')
     const needsQuotes = new RegExp(
-        '^\\s|^"|^\'|^#|^\\/\\*|^\\/\\/|^\\{|^\\}|^\\[|^\\]|^:|^,|\\s$|[\x00-\x1f' + commonRange + ']',
+        '^\\s|^"|^\'|^\\/\\*|^\\/\\/|^\\{|^\\}|^\\[|^\\]|^:|^,|\\s$|[\x00-\x1f' + commonRange + ']',
         'g',
     )
     const needsEscapeML = new RegExp(
@@ -100,8 +98,8 @@ export default function stringify(data, opt) {
         '\x0b\x0c\x0e-\x1f' + commonRange + ']',
         'g',
     )
-    const startsWithKeyword = new RegExp('^(true|false|null)\\s*((,|\\]|\\}|#|//|/\\*).*)?$')
-    const needsEscapeName = /[,\{\[\}\]\s:#"']|\/\/|\/\*/
+    const startsWithKeyword = new RegExp('^(true|false|null|NaN|[+-]?Infinity)\\s*((,|\\]|\\}|//|/\\*).*)?$')
+    const needsEscapeName = /[,\{\[\}\]\s:"']|\/\/|\/\*/
     const meta = {
         '\b': 'b', '\t': 't', '\n': 'n', '\f': 'f', '\r': 'r',
         '"': '"', "'": "'", '\\': '\\',
@@ -199,7 +197,8 @@ export default function stringify(data, opt) {
             needsQuotes.test(string) ||
             breaksQuoteless(string) ||
             tryParseNumber(string, true) !== undefined ||
-            startsWithKeyword.test(string)
+            startsWithKeyword.test(string) ||
+            looksLikeIsoDate(string)
         ) {
             needsEscape.lastIndex = 0
             needsEscapeML.lastIndex = 0
@@ -271,7 +270,7 @@ export default function stringify(data, opt) {
 
     /**
      * Рендер before-comment / пустой строки.
-     * Возвращает то, что надо положить в partial: `\n<gap># c\n<gap>` либо `\n<gap>`.
+     * Возвращает то, что надо положить в partial: `\n<gap>// c\n<gap>` либо `\n<gap>`.
      */
     function beforeComment(c, indentLevel) {
         if (c && c[0]) {
@@ -286,7 +285,7 @@ export default function stringify(data, opt) {
 
     /**
      * Рендер after-comment (того, что стоит на строке значения).
-     * Возвращает '' или ` # ...` / `\n<gap># ...`.
+     * Возвращает '' или ` // ...` / `\n<gap>// ...`.
      */
     function afterComment(c, ca, indentLevel) {
         if (!c || !c[1]) return ''
@@ -299,16 +298,13 @@ export default function stringify(data, opt) {
     // ==================================================================
 
     function str(value, hasComment, noIndent, isRootObject) {
-        const dsfValue = runDsf(value)
-        if (dsfValue !== undefined) return wrap(token.dsf, dsfValue)
+        if (isDate(value)) return wrap(token.date, dateToString(value))
 
         switch (typeof value) {
             case 'string':
                 return quote(value, hasComment, isRootObject, noIndent)
             case 'number':
-                return isFinite(value)
-                    ? wrap(token.num, String(value))
-                    : wrap(token.lit, 'null')
+                return wrap(token.num, numberToString(value))
             case 'boolean':
                 return wrap(token.lit, String(value))
             case 'object': {

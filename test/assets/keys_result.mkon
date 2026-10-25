@@ -6,8 +6,8 @@
   .key: test
   trailing: test
   trailing2: test
-  "#c1": test
-  "foo#bar": test
+  #c1: test
+  foo#bar: test
   "//bar": test
   "foo//bar": test
   "/*foo*/": test

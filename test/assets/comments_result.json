@@ -1,4 +1,6 @@
 {
+  "hash1": "#fff",
+  "hash2": "a # b",
   "foo1": "This is a string value. # part of the string",
   "foo2": "This is a string value.",
   "bar1": "This is a string value. // part of the string",

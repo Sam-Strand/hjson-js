@@ -29,7 +29,7 @@ function rtTwice(source, opts = rtOpts) {
 
 describe('rt comments: базовая индентация', () => {
     it('вложенные ключи и объекты, комментарии на каждом уровне', () => {
-        const source = `# root comment
+        const source = `// root comment
 // lv1 comment
 lv1: {
     /*
@@ -50,15 +50,15 @@ lv1: {
     })
 
     it('глубокая вложенность (5 уровней) с комментарием на каждом', () => {
-        const source = `# l0
+        const source = `// l0
 a: {
-    # l1
+    // l1
     b: {
-        # l2
+        // l2
         c: {
-            # l3
+            // l3
             d: {
-                # l4
+                // l4
                 e: 1
             }
         }
@@ -70,7 +70,7 @@ a: {
 
     it('indent = 2 сохраняется', () => {
         const source = `a: {
-  # c
+  // c
   b: 1
 }
 `
@@ -79,7 +79,7 @@ a: {
 
     it('indent = 4 сохраняется', () => {
         const source = `a: {
-    # c
+    // c
     b: 1
 }
 `
@@ -88,7 +88,7 @@ a: {
 
     it('indent = tab сохраняется', () => {
         const source = `a: {
-\t# c
+\t// c
 \tb: 1
 }
 `
@@ -101,9 +101,9 @@ a: {
 // ===========================================================================
 
 describe('rt comments: виды комментариев', () => {
-    it('# перед ключом', () => {
+    it('// перед ключом', () => {
         const source = `a: {
-    # c
+    // c
     b: 1
 }
 `
@@ -154,8 +154,8 @@ describe('rt comments: виды комментариев', () => {
         expect(rt(source)).toBe(source)
     })
 
-    it('# после значения (inline)', () => {
-        const source = `a: 1 # c
+    it('// после значения (inline)', () => {
+        const source = `a: 1 // c
 `
         expect(rt(source)).toBe(source)
     })
@@ -174,7 +174,7 @@ describe('rt comments: виды комментариев', () => {
 
     it('комментарий перед элементом массива', () => {
         const source = `a: [
-    # c
+    // c
     1
     2
 ]
@@ -184,7 +184,7 @@ describe('rt comments: виды комментариев', () => {
 
     it('комментарий после элемента массива', () => {
         const source = `a: [
-    1 # c
+    1 // c
     2
 ]
 `
@@ -193,26 +193,26 @@ describe('rt comments: виды комментариев', () => {
 })
 
 // ===========================================================================
-// 3. Многострочные #-комментарии подряд
+// 3. Многострочные //-комментарии подряд
 // ===========================================================================
 
 describe('rt comments: несколько подряд', () => {
-    it('три # подряд перед ключом', () => {
+    it('три // подряд перед ключом', () => {
         const source = `a: {
-    # one
-    # two
-    # three
+    // one
+    // two
+    // three
     b: 1
 }
 `
         expect(rt(source)).toBe(source)
     })
 
-    it('# и // вперемешку', () => {
+    it('// и // вперемешку', () => {
         const source = `a: {
-    # one
+    // one
     // two
-    # three
+    // three
     b: 1
 }
 `
@@ -221,11 +221,11 @@ describe('rt comments: несколько подряд', () => {
 
     it('комментарий перед несколькими ключами', () => {
         const source = `a: {
-    # first
+    // first
     b: 1
-    # second
+    // second
     c: 2
-    # third
+    // third
     d: 3
 }
 `
@@ -234,8 +234,8 @@ describe('rt comments: несколько подряд', () => {
 
     it('перед ключом и после значения одновременно', () => {
         const source = `a: {
-    # before
-    b: 1 # after
+    // before
+    b: 1 // after
     c: 2
 }
 `
@@ -248,8 +248,8 @@ describe('rt comments: несколько подряд', () => {
 // ===========================================================================
 
 describe('rt comments: корневые', () => {
-    it('корневой #', () => {
-        const source = `# header
+    it('корневой //', () => {
+        const source = `// header
 a: 1
 `
         expect(rt(source)).toBe(source)
@@ -280,7 +280,7 @@ a: 1
     })
 
     it('два корневых комментария подряд', () => {
-        const source = `# one
+        const source = `// one
 // two
 a: 1
 `
@@ -288,9 +288,9 @@ a: 1
     })
 
     it('корневой + комментарий внутри', () => {
-        const source = `# root
+        const source = `// root
 a: {
-    # inner
+    // inner
     b: 1
 }
 `
@@ -319,12 +319,12 @@ describe('rt comments: пустые контейнеры (стабильност
     }
 
     it('пустой объект с комментарием внутри сохраняется буквально', () => {
-        const source = `a: {\n    # only comment\n}\n`
+        const source = `a: {\n    // only comment\n}\n`
         expect(rt(source)).toBe(source)
     })
 
     it('пустой массив с комментарием внутри сохраняется буквально', () => {
-        const source = `a: [\n    # only comment\n]\n`
+        const source = `a: [\n    // only comment\n]\n`
         expect(rt(source)).toBe(source)
     })
 })
@@ -337,7 +337,7 @@ describe('rt comments: смешанные структуры', () => {
     it('комментарий внутри объекта внутри массива', () => {
         const source = `a: [
     {
-        # inner
+        // inner
         b: 1
     }
 ]
@@ -347,9 +347,9 @@ describe('rt comments: смешанные структуры', () => {
 
     it('массив внутри объекта с комментариями на двух уровнях', () => {
         const source = `a: {
-    # obj-level
+    // obj-level
     b: [
-        # arr-level
+        // arr-level
         1
         2
     ]
@@ -361,11 +361,11 @@ describe('rt comments: смешанные структуры', () => {
     it('несколько объектов в массиве, каждый со своим комментарием', () => {
         const source = `a: [
     {
-        # first
+        // first
         x: 1
     }
     {
-        # second
+        // second
         y: 2
     }
 ]
@@ -375,7 +375,7 @@ describe('rt comments: смешанные структуры', () => {
 
     it('комментарий перед элементом массива объектов', () => {
         const source = `a: [
-    # about obj
+    // about obj
     {
         b: 1
     }
@@ -391,16 +391,16 @@ describe('rt comments: смешанные структуры', () => {
 
 describe('rt comments: после вложенных значений (стабильность)', () => {
     it('после вложенного объекта', () => {
-        const source = `a: {\n    b: { c: 1 } # after\n}\n`
+        const source = `a: {\n    b: { c: 1 } // after\n}\n`
         const once = rt(source)
-        expect(once).toMatch(/# after/)
+        expect(once).toMatch(/\/\/ after/)
         expect(rt(once)).toBe(once)
     })
 
     it('после массива', () => {
-        const source = `a: {\n    b: [1, 2] # after\n}\n`
+        const source = `a: {\n    b: [1, 2] // after\n}\n`
         const once = rt(source)
-        expect(once).toMatch(/# after/)
+        expect(once).toMatch(/\/\/ after/)
         expect(rt(once)).toBe(once)
     })
 })
@@ -413,13 +413,13 @@ describe('rt comments: idempotency', () => {
     const cases = [
         [
             'многоуровневая вложенность',
-            `# root
+            `// root
 a: {
     // l1
     b: {
         /* l2 */
         c: [
-            # arr
+            // arr
             1
             2
         ]
@@ -429,9 +429,9 @@ a: {
         ],
         [
             'корневой + несколько ключей',
-            `# top
+            `// top
 a: 1
-# mid
+// mid
 b: 2
 // bottom
 c: 3
@@ -451,12 +451,12 @@ c: 3
         ],
         [
             'всё вперемешку',
-            `# r
+            `// r
 a: [
-    # first
+    // first
     {
-        x: 1 # after x
-        # before y
+        x: 1 // after x
+        // before y
         y: 2
     }
     // second
@@ -487,7 +487,7 @@ describe('rt comments: стабильность после повторного 
         const source = `a: {
     b: {
         c: {
-            # deep
+            // deep
             d: 1
         }
     }
@@ -503,13 +503,13 @@ describe('rt comments: стабильность после повторного 
 
     it('комментарий остаётся на своём узле, а не съезжает к соседу', () => {
         const source = `a: {
-    # about b
+    // about b
     b: 1
     c: 2
 }
 `
         const out = rt(source)
-        expect(out).toMatch(/# about b\n\s+b: 1/)
-        expect(out).not.toMatch(/# about b\n\s+c: 2/)
+        expect(out).toMatch(/\/\/ about b\n\s+b: 1/)
+        expect(out).not.toMatch(/\/\/ about b\n\s+c: 2/)
     })
 })
