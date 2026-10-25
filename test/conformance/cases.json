@@ -646,7 +646,7 @@
       },
       "t": "tab\tx"
     },
-    "text": "{\n  z: 1,\n  a:\n  [\n    \"x\",\n    \"y z\",\n    3\n  ],\n  b:\n  {\n    2: \"n\",\n    c: \"multi\\nline\",\n    d: \"it's\",\n    é: \"😀\"\n  },\n  t: \"tab\\tx\"\n}\n"
+    "text": "{\n  z: 1,\n  a:\n  [\n    x,\n    y z,\n    3\n  ],\n  b:\n  {\n    2: n,\n    c:\n      '''\n      multi\n      line\n      ''',\n    d: it's,\n    é: 😀\n  },\n  t: '''tab\tx'''\n}\n"
   },
   {
     "name": "options {\"condense\": 40}",
@@ -669,7 +669,7 @@
       },
       "t": "tab\tx"
     },
-    "text": "{\n  z: 1\n  a: [\"x\", \"y z\", 3]\n  b:\n  {\n    2: n\n    c:\n      '''\n      multi\n      line\n      '''\n    d: it's\n    é: 😀\n  }\n  t: '''tab\tx'''\n}\n"
+    "text": "{\n  z: 1\n  a: [x, y z, 3]\n  b: {2: n, c: \"multi\\nline\", d: it's, é: 😀}\n  t: '''tab\tx'''\n}\n"
   },
   {
     "name": "options {\"bracesSameLine\": true}",
@@ -914,9 +914,9 @@
       ]
     },
     "options": {
-      "condense": 18
+      "condense": 14
     },
-    "text": "{\n  a: [\"😀😀😀😀😀\", \"x\"]\n  b:\n  [\n    😀😀😀😀😀😀\n    x\n  ]\n}\n",
+    "text": "{\n  a: [😀😀😀😀😀, x]\n  b:\n  [\n    😀😀😀😀😀😀\n    x\n  ]\n}\n",
     "value": {
       "a": [
         "😀😀😀😀😀",
@@ -1143,5 +1143,28 @@
     "rt": true,
     "value": null,
     "text": "null\n"
+  },
+  {
+    "name": "condense keeps strings quoteless",
+    "mkon": "ignored_patterns: ['_*', '.~lock.*', '~$*']\nneed_quotes: ['a, b', '1', 'true', '2024-01-15', '[x', ' s']",
+    "options": {
+      "condense": 120
+    },
+    "value": {
+      "ignored_patterns": [
+        "_*",
+        ".~lock.*",
+        "~$*"
+      ],
+      "need_quotes": [
+        "a, b",
+        "1",
+        "true",
+        "2024-01-15",
+        "[x",
+        " s"
+      ]
+    },
+    "text": "{\n  ignored_patterns: [_*, .~lock.*, ~$*]\n  need_quotes: [\"a, b\", \"1\", \"true\", \"2024-01-15\", \"[x\", \" s\"]\n}\n"
   }
 ]

@@ -20,9 +20,9 @@
       "development": "./src/index.js",
       "import": "./dist/index.js"
     },
-    "./vite-plugin-hjson": {
-      "types": "./dist/vite-plugin-hjson.d.ts",
-      "import": "./dist/vite-plugin-hjson.js"
+    "./vite-plugin-mkon": {
+      "types": "./dist/vite-plugin-mkon.d.ts",
+      "import": "./dist/vite-plugin-mkon.js"
     }
   },
   "license": "MIT",

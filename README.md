@@ -161,7 +161,7 @@ const text = stringify(data, { space: 2, quotes: 'min' })
 | `space` | `number \| string` | `'  '` | Отступ: число пробелов или готовая строка. |
 | `bracesSameLine` | `boolean` | `false` | Открывающая `{`/`[`/`'''` на одной строке с ключом. |
 | `emitRootBraces` | `boolean` | `true` | Оборачивать корневой объект в `{}`. Если `false` — скобки убираются. |
-| `separator` | `boolean` | `false` | Добавлять запятые между элементами. Побочно включает `quoteStrings`. |
+| `separator` | `boolean` | `false` | Добавлять запятые между элементами. Кавычки ставятся по тем же правилам, что и без запятых. |
 | `multiline` | `'std' \| 'no-tabs' \| 'off'` | `'std'` | Режим multiline-строк (`'''`): `std` — табы разрешены; `no-tabs` — табы экранируются; `off` — multiline отключён. |
 | `condense` | `number` | `0` | Порог схлопывания объекта/массива в одну строку. `0` — выключено. |
 

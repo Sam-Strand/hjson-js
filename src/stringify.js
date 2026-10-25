@@ -259,7 +259,6 @@ export default function stringify(data, opt) {
             mind, eolMind, eolGap, prefix,
             partial: [],
             cpartial: condense ? [] : null,
-            saveQuoteStrings: quoteStrings,
             saveMultiline: multiline,
             iseparator: separator ? '' : token.com[0],
             cwrapLen: 0,
@@ -359,10 +358,8 @@ export default function stringify(data, opt) {
                 switch (typeof v) {
                     case 'string':
                         wrapLen = 0
-                        quoteStrings = true
                         multiline = 0
                         cpartial.push(str(v, false, true) + (setsep ? token.com[0] : ''))
-                        quoteStrings = ctx.saveQuoteStrings
                         multiline = ctx.saveMultiline
                         break
                     case 'object':
@@ -461,10 +458,8 @@ export default function stringify(data, opt) {
                 switch (typeof v) {
                     case 'string': {
                         wrapLen = 0
-                        quoteStrings = true
                         multiline = 0
                         const vs2 = str(v, false)
-                        quoteStrings = ctx.saveQuoteStrings
                         multiline = ctx.saveMultiline
                         cpartial.push(
                             quoteKey(k) + token.col[0] + ' ' + vs2 + (setsep ? token.com[0] : ''),

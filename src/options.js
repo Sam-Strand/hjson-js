@@ -110,7 +110,7 @@ export function normalizeOptions(opt) {
 
     // --- флаги
     const separatorOn = o.separator === true
-    const quoteStrings = quotes === 'all' || quotes === 'strings' || separatorOn
+    const quoteStrings = quotes === 'all' || quotes === 'strings'
     const quoteKeys = quotes === 'all' || quotes === 'keys'
 
     // multiline выключается, если строки всё равно в кавычках или явно off
