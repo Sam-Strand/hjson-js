@@ -10,8 +10,9 @@ const TFNNS_PLAIN_RE = /[^\r\n,{}\[\]\/]+/y
 const STRING_PLAIN_RE = { '"': /[^"\\\n\r]+/y, "'": /[^'\\\n\r]+/y }
 // ordinary characters of a quoteless key
 const KEY_PLAIN_RE = /[^\x00-\x20{}\[\],:]+/y
-// ordinary characters inside a ''' string
-const ML_PLAIN_RE = /[^'\n\r]+/y
+// leading whitespace of a line inside a ''' string / a line with some text
+const ML_INDENT_RE = /^[\x00-\x09\x0b-\x20]*/
+const ML_TEXT_RE = /[^\x00-\x09\x0b-\x20]/
 
 function runAt(re, text, pos) {
     re.lastIndex = pos
@@ -118,56 +119,38 @@ export default function parse(source, opt) {
     }
 
     function mlString() {
-        // Parse a multiline string value.
-        var string = '', triple = 0
-
-        // we are at ''' +1 - get indent
-        var indent = 0
-        for (; ;) {
-            var c = peek(-indent - 5)
-            if (!c || c === '\n') break
-            indent++
+        // Parse a multiline string value; we are just past the opening '''.
+        // The common indent is the smallest indent among the non-blank lines and the line
+        // of the closing ''' (when only whitespace precedes it). The column of the opening
+        // ''' does not matter. \r is dropped (CRLF files).
+        var start = at - 1
+        var end = text.indexOf("'''", start)
+        if (end < 0) {
+            jump(text.length)
+            error("Bad multiline string")
         }
+        jump(end + 3)
 
-        function skipIndent() {
-            var skip = indent
-            while (ch && ch <= ' ' && ch !== '\n' && skip-- > 0) next()
+        var raw = text.slice(start, end).replace(/\r/g, '')
+        var nl = raw.indexOf('\n')
+        // text right after the opening ''' (one-line form or a first line)
+        var first = (nl < 0 ? raw : raw.slice(0, nl)).replace(ML_INDENT_RE, '')
+        if (nl < 0) return first
+
+        var lines = raw.slice(nl + 1).split('\n')
+        var closing = lines[lines.length - 1]
+        var closingAlone = !ML_TEXT_RE.test(closing)
+        var base = closingAlone ? closing.length : Infinity
+        for (var i = 0; i < lines.length; i++) {
+            if (ML_TEXT_RE.test(lines[i])) base = Math.min(base, lines[i].match(ML_INDENT_RE)[0].length)
         }
-
-        // skip white/to (newline)
-        while (ch && ch <= ' ' && ch !== '\n') next()
-        if (ch === '\n') { next(); skipIndent(); }
-
-        // When parsing multiline string values, we must look for ' characters.
-        for (; ;) {
-            if (!ch) {
-                error("Bad multiline string")
-            } else if (ch === '\'') {
-                triple++
-                next()
-                if (triple === 3) {
-                    if (string.slice(-1) === '\n') string = string.slice(0, -1); // remove last EOL
-                    return string
-                } else continue
-            } else {
-                while (triple > 0) {
-                    string += '\''
-                    triple--
-                }
-            }
-            if (ch === '\n') {
-                string += '\n'
-                next()
-                skipIndent()
-            } else if (ch === '\r') {
-                next()
-            } else {
-                // ordinary characters up to a quote / end of line, in one go
-                var m = runAt(ML_PLAIN_RE, text, at - 1)
-                string += m[0]
-                jump(ML_PLAIN_RE.lastIndex)
-            }
+        if (closingAlone) lines.pop()
+        for (i = 0; i < lines.length; i++) {
+            var lead = lines[i].match(ML_INDENT_RE)[0].length
+            lines[i] = lines[i].slice(Math.min(base, lead))
         }
+        if (first) lines.unshift(first)
+        return lines.join('\n')
     }
 
     function keyname() {

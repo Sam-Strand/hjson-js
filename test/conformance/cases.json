@@ -475,9 +475,9 @@
     "name": "multiline string with astral indent",
     "mkon": "{\n  k😀: '''\n         x\n        '''\n}",
     "value": {
-      "k😀": "  x\n "
+      "k😀": " x"
     },
-    "text": "{\n  k😀:\n    '''\n      x\n     \n    '''\n}\n"
+    "text": "{\n  k😀: \" x\"\n}\n"
   },
   {
     "name": "multiline string",
@@ -692,7 +692,7 @@
       },
       "t": "tab\tx"
     },
-    "text": "{\n  z: 1\n  a: [\n    x\n    y z\n    3\n  ]\n  b: {\n    2: n\n    c:\n      '''\n      multi\n      line\n      '''\n    d: it's\n    é: 😀\n  }\n  t: '''tab\tx'''\n}\n"
+    "text": "{\n  z: 1\n  a: [\n    x\n    y z\n    3\n  ]\n  b: {\n    2: n\n    c: '''\n      multi\n      line\n      '''\n    d: it's\n    é: 😀\n  }\n  t: '''tab\tx'''\n}\n"
   },
   {
     "name": "options {\"emitRootBraces\": false}",
@@ -1104,7 +1104,7 @@
       "bracesSameLine": true,
       "space": 4
     },
-    "text": "{\n    a:\n        '''\n        x\n        y\n        '''\n    abc:\n        '''\n          x\n        y\n        '''\n    list: [\n        '''\n          x\n        y\n        '''\n    ]\n}\n",
+    "text": "{\n    a: '''\n        x\n        y\n        '''\n    abc: '''\n          x\n        y\n        '''\n    list: [\n        '''\n          x\n        y\n        '''\n    ]\n}\n",
     "value": {
       "a": "x\ny",
       "abc": "  x\ny",
@@ -1166,5 +1166,133 @@
       ]
     },
     "text": "{\n  ignored_patterns: [_*, .~lock.*, ~$*]\n  need_quotes: [\"a, b\", \"1\", \"true\", \"2024-01-15\", \"[x\", \" s\"]\n}\n"
+  },
+  {
+    "name": "bracesSameLine keeps ''' after the key",
+    "input": {
+      "list": [
+        {
+          "header": "Vпр2, \nм3",
+          "param_uid": "X"
+        }
+      ],
+      "a": "x\ny"
+    },
+    "options": {
+      "bracesSameLine": true
+    },
+    "text": "{\n  list: [\n    {\n      header: '''\n        Vпр2, \n        м3\n        '''\n      param_uid: X\n    }\n  ]\n  a: '''\n    x\n    y\n    '''\n}\n",
+    "value": {
+      "list": [
+        {
+          "header": "Vпр2, \nм3",
+          "param_uid": "X"
+        }
+      ],
+      "a": "x\ny"
+    }
+  },
+  {
+    "name": "bracesSameLine: ''' after the key keeps leading whitespace of the lines",
+    "input": {
+      "s": "  lead\nz",
+      "t": "a\n\tb"
+    },
+    "options": {
+      "bracesSameLine": true
+    },
+    "text": "{\n  s: '''\n      lead\n    z\n    '''\n  t: '''\n    a\n    \tb\n    '''\n}\n",
+    "value": {
+      "s": "  lead\nz",
+      "t": "a\n\tb"
+    }
+  },
+  {
+    "name": "bracesSameLine: ''' after a key shorter than the indent",
+    "input": {
+      "a": "x\ny",
+      "bb": "p\nq"
+    },
+    "options": {
+      "bracesSameLine": true,
+      "space": 4
+    },
+    "text": "{\n    a: '''\n        x\n        y\n        '''\n    bb: '''\n        p\n        q\n        '''\n}\n",
+    "value": {
+      "a": "x\ny",
+      "bb": "p\nq"
+    }
+  },
+  {
+    "name": "''' indent: smallest of the lines and the closing '''",
+    "mkon": "a: '''\n   a\n   b\n  '''",
+    "value": {
+      "a": " a\n b"
+    },
+    "text": "{\n  a:\n    '''\n     a\n     b\n    '''\n}\n"
+  },
+  {
+    "name": "''' indent: closing ''' at the text level",
+    "mkon": "a: '''\n a\n b\n '''",
+    "value": {
+      "a": "a\nb"
+    },
+    "text": "{\n  a:\n    '''\n    a\n    b\n    '''\n}\n"
+  },
+  {
+    "name": "''' indent: column of the opening ''' does not matter",
+    "mkon": "a:          '''\n  x\n    y\n  '''",
+    "value": {
+      "a": "x\n  y"
+    },
+    "text": "{\n  a:\n    '''\n    x\n      y\n    '''\n}\n"
+  },
+  {
+    "name": "''' indent: text right before the closing '''",
+    "mkon": "a: '''\n    p\n      q\n    r'''",
+    "value": {
+      "a": "p\n  q\nr"
+    },
+    "text": "{\n  a:\n    '''\n    p\n      q\n    r\n    '''\n}\n"
+  },
+  {
+    "name": "''' indent: a closing ''' to the right of the text",
+    "mkon": "a: '''\n  x\n      '''",
+    "value": {
+      "a": "x"
+    },
+    "text": "{\n  a: x\n}\n"
+  },
+  {
+    "name": "''' indent: blank lines do not count",
+    "mkon": "a: '''\n\n    t\n  \n      \n    '''",
+    "value": {
+      "a": "\nt\n\n  "
+    },
+    "text": "{\n  a:\n    '''\n\n    t\n\n      \n    '''\n}\n"
+  },
+  {
+    "name": "''' indent: tabs",
+    "mkon": "a: '''\n\t\tx\n\t\t  y\n\t\t'''",
+    "value": {
+      "a": "x\n  y"
+    },
+    "text": "{\n  a:\n    '''\n    x\n      y\n    '''\n}\n"
+  },
+  {
+    "name": "''' indent: text on the opening line",
+    "mkon": "a: '''  x\n    y\n      z\n    '''",
+    "value": {
+      "a": "x\ny\n  z"
+    },
+    "text": "{\n  a:\n    '''\n    x\n    y\n      z\n    '''\n}\n"
+  },
+  {
+    "name": "''' indent: CRLF",
+    "mkon": "a: '''\r\n    x\r\n      y\r\n    '''\r\n",
+    "value": {
+      "a": "x\n  y"
+    },
+    "text": "{\n  a:\n    '''\n    x\n      y\n    '''\n}\n"
   }
 ]

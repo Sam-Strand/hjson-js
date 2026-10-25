@@ -221,10 +221,9 @@ export default function stringify(data, opt) {
         if (a.length === 1 && a[0][0] !== "'" && a[0][a[0].length - 1] !== "'" && !(a[0][0] <= ' ')) {
             return wrap(token.mstr, a[0])
         }
-        // The reader takes the block indent from the column of the opening '''.
-        // For an object value (not shallow) that column must equal currentGap,
-        // so ''' always goes on its own line, even with bracesSameLine.
-        let res = (sameLine && shallow ? '' : eol + currentGap) + token.mstr[0]
+        // The reader strips the smallest indent of the lines and of the closing ''' (written
+        // at currentGap), so the opening ''' may stay after the key with bracesSameLine.
+        let res = (sameLine ? '' : eol + currentGap) + token.mstr[0]
         for (let i = 0; i < a.length; i++) {
             res += eol
             if (a[i]) res += currentGap + a[i]
@@ -440,10 +439,10 @@ export default function stringify(data, opt) {
             // key: value
             wrapLen = 0
             const v = value[k]
+            const qk = quoteKey(k) + token.col[0]
             const vs = str(v, comments && ca)
             partial.push(
-                quoteKey(k) +
-                token.col[0] +
+                qk +
                 (startsWithNL(vs) ? '' : ' ') +
                 vs +
                 (setsep ? separator : ''),
