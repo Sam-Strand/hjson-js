@@ -72,16 +72,18 @@
     "text": "\"Hello, world\"\n"
   },
   {
-    "name": "comma in multiline text is an error",
+    "name": "object: comma without a following key is text",
     "mkon": "{\n  a: Hello, world\n}",
-    "error": true,
-    "message": "Found '}' where a key name was expected (check your syntax or use quotes if the key name includes {}[],: or whitespace)"
+    "value": {
+      "a": "Hello, world"
+    },
+    "text": "{\n  a: Hello, world\n}\n"
   },
   {
     "name": "stray closing bracket",
     "mkon": "{ a: x] }",
     "error": true,
-    "message": "Found ']' where a key name was expected (check your syntax or use quotes if the key name includes {}[],: or whitespace)"
+    "message": "Found ']' where a key name was expected (check your syntax or use quotes if the key name includes {}[],: or a line break)"
   },
   {
     "name": "hash is not a comment",
@@ -464,7 +466,7 @@
       "k😀": "v",
       "mixed": "a😀b, c"
     },
-    "text": "{\n  emoji: 😀 x\n  k😀: v\n  mixed: \"a😀b, c\"\n}\n",
+    "text": "{\n  emoji: 😀 x\n  k😀: v\n  mixed: a😀b, c\n}\n",
     "value": {
       "emoji": "😀 x",
       "k😀": "v",
@@ -1034,10 +1036,12 @@
     "message": "Bad string containing newline"
   },
   {
-    "name": "error: key with space",
+    "name": "key with spaces",
     "mkon": "{ a b: 1 }",
-    "error": true,
-    "message": "Found whitespace in your key name (use quotes to include)"
+    "value": {
+      "a b": 1
+    },
+    "text": "{\n  a b: 1\n}\n"
   },
   {
     "name": "error: trailing characters",
@@ -1294,5 +1298,304 @@
       "a": "x\n  y"
     },
     "text": "{\n  a:\n    '''\n    x\n      y\n    '''\n}\n"
+  },
+  {
+    "name": "object: comma before 'key:' separates",
+    "mkon": "{ a: x, y, b: 1, c: P пара, кг/см2 }",
+    "value": {
+      "a": "x, y",
+      "b": 1,
+      "c": "P пара, кг/см2"
+    },
+    "text": "{\n  a: x, y\n  b: 1\n  c: P пара, кг/см2\n}\n"
+  },
+  {
+    "name": "object: comma rules on separate lines",
+    "mkon": "header: ЭК-6. P пара, кг/см2\nurl: tec-1,2,3\nt: 1, 2\nn: true, false\nd: 2024-01-15, 2024-01-16\nq: {h: P пара, кг/см2, u: null}",
+    "value": {
+      "header": "ЭК-6. P пара, кг/см2",
+      "url": "tec-1,2,3",
+      "t": "1, 2",
+      "n": "true, false",
+      "d": "2024-01-15, 2024-01-16",
+      "q": {
+        "h": "P пара, кг/см2",
+        "u": null
+      }
+    },
+    "text": "{\n  header: ЭК-6. P пара, кг/см2\n  url: tec-1,2,3\n  t: 1, 2\n  n: true, false\n  d: 2024-01-15, 2024-01-16\n  q:\n  {\n    h: P пара, кг/см2\n    u: null\n  }\n}\n"
+  },
+  {
+    "name": "object: ':' after a comma starts a key",
+    "mkon": "path: копия, C:\\data\ntime: начало, 10:30",
+    "value": {
+      "10": 30,
+      "path": "копия",
+      "C": "\\data",
+      "time": "начало"
+    },
+    "text": "{\n  10: 30\n  path: копия\n  C: \\data\n  time: начало\n}\n"
+  },
+  {
+    "name": "object: trailing comma and comment",
+    "mkon": "{\n  a: x,\n  b: y,  // c\n  c: z, /* d */\n  e: w,\n}",
+    "rt": true,
+    "value": {
+      "a": "x",
+      "b": "y",
+      "c": "z",
+      "e": "w"
+    },
+    "text": "{\n  a: x\n  b: \"y\" // c\n  c: \"z\" /* d */\n  e: w\n}\n"
+  },
+  {
+    "name": "object: quoted key after a comma",
+    "mkon": "{ a: x, \"k, 2\": 2, b: y, 'k 3': 3, c: \"z\" }",
+    "value": {
+      "a": "x",
+      "k, 2": 2,
+      "b": "y",
+      "k 3": 3,
+      "c": "z"
+    },
+    "text": "{\n  a: x\n  \"k, 2\": 2\n  b: y\n  k 3: 3\n  c: z\n}\n"
+  },
+  {
+    "name": "object: ''' key after a comma",
+    "mkon": "{ a: x, '''k''': 2 }",
+    "value": {
+      "a": "x",
+      "k": 2
+    },
+    "text": "{\n  a: x\n  k: 2\n}\n"
+  },
+  {
+    "name": "array: comma always separates",
+    "mkon": "[P пара, кг/см2, a: b]",
+    "value": [
+      "P пара",
+      "кг/см2",
+      "a: b"
+    ],
+    "text": "[\n  P пара\n  кг/см2\n  a: b\n]\n"
+  },
+  {
+    "name": "key: spaces inside, trimmed before ':'",
+    "mkon": "ЭК-6. P пара  : 12.5\na  b\t c: 1",
+    "value": {
+      "ЭК-6. P пара": 12.5,
+      "a  b\t c": 1
+    },
+    "text": "{\n  ЭК-6. P пара: 12.5\n  \"a  b\\t c\": 1\n}\n"
+  },
+  {
+    "name": "key: ':' on a later line",
+    "mkon": "{\n  key\n\n    : value\n}",
+    "value": {
+      "key": "value"
+    },
+    "text": "{\n  key: value\n}\n"
+  },
+  {
+    "name": "key: line break before ':' with text is an error",
+    "mkon": "{\n  a b\n  c: 1\n}",
+    "error": true,
+    "message": "Found a line break while looking for ':' after the key name (check your syntax)"
+  },
+  {
+    "name": "key: ''' block",
+    "mkon": "{\n  '''\n  мн\n    ключ\n  ''': 1\n  '''one''': 2\n}",
+    "value": {
+      "мн\n  ключ": 1,
+      "one": 2
+    },
+    "text": "{\n  '''\n  мн\n    ключ\n  ''': 1\n  one: 2\n}\n"
+  },
+  {
+    "name": "key: punctuation needs quotes",
+    "mkon": "{ a{b: 1 }",
+    "error": true,
+    "message": "Found '{' where a key name was expected (check your syntax or use quotes if the key name includes {}[],: or a line break)"
+  },
+  {
+    "name": "stringify: object values with commas",
+    "input": {
+      "a": "x, y",
+      "b": "P пара, кг/см2",
+      "c": "копия, C: data",
+      "d": "x,",
+      "e": "x, // c",
+      "f": "x, \"y\": 1",
+      "g": "x, 'y'",
+      "h": "tec-1,2,3"
+    },
+    "text": "{\n  a: x, y\n  b: P пара, кг/см2\n  c: \"копия, C: data\"\n  d: \"x,\"\n  e: \"x, // c\"\n  f: '''x, \"y\": 1'''\n  g: x, 'y'\n  h: tec-1,2,3\n}\n",
+    "value": {
+      "a": "x, y",
+      "b": "P пара, кг/см2",
+      "c": "копия, C: data",
+      "d": "x,",
+      "e": "x, // c",
+      "f": "x, \"y\": 1",
+      "g": "x, 'y'",
+      "h": "tec-1,2,3"
+    }
+  },
+  {
+    "name": "stringify: object values with commas, condensed",
+    "input": {
+      "o": {
+        "a": "x, y",
+        "b": "p, q: r",
+        "c": "z,"
+      }
+    },
+    "options": {
+      "condense": 120
+    },
+    "text": "{\n  o: {a: x, y, b: \"p, q: r\", c: \"z,\"}\n}\n",
+    "value": {
+      "o": {
+        "a": "x, y",
+        "b": "p, q: r",
+        "c": "z,"
+      }
+    }
+  },
+  {
+    "name": "stringify: keys",
+    "input": {
+      "key with spaces": 1,
+      " lead": 2,
+      "trail ": 3,
+      "a:b": 4,
+      "a,b": 5,
+      "a{b": 6,
+      "a//b": 7,
+      "мн\nключ": 8,
+      "  отступ\nключ": 9,
+      "\"q": 10,
+      "tab\tkey": 11,
+      "": 12
+    },
+    "text": "{\n  key with spaces: 1\n  \" lead\": 2\n  \"trail \": 3\n  \"a:b\": 4\n  \"a,b\": 5\n  \"a{b\": 6\n  \"a//b\": 7\n  '''\n  мн\n  ключ\n  ''': 8\n  '''\n    отступ\n  ключ\n  ''': 9\n  \"\\\"q\": 10\n  \"tab\\tkey\": 11\n  \"\": 12\n}\n",
+    "value": {
+      "key with spaces": 1,
+      " lead": 2,
+      "trail ": 3,
+      "a:b": 4,
+      "a,b": 5,
+      "a{b": 6,
+      "a//b": 7,
+      "мн\nключ": 8,
+      "  отступ\nключ": 9,
+      "\"q": 10,
+      "tab\tkey": 11,
+      "": 12
+    }
+  },
+  {
+    "name": "stringify: multiline key, bracesSameLine and separator",
+    "input": {
+      "мн\nключ": {
+        "x": "a\nb"
+      },
+      "k": [
+        1
+      ]
+    },
+    "options": {
+      "bracesSameLine": true,
+      "separator": true
+    },
+    "text": "{\n  '''\n  мн\n  ключ\n  ''': {\n    x: '''\n      a\n      b\n      '''\n  },\n  k: [\n    1\n  ]\n}\n",
+    "value": {
+      "мн\nключ": {
+        "x": "a\nb"
+      },
+      "k": [
+        1
+      ]
+    }
+  },
+  {
+    "name": "stringify: multiline key in a condensed object",
+    "input": {
+      "o": {
+        "мн\nключ": 1,
+        "b": 2
+      }
+    },
+    "options": {
+      "condense": 120
+    },
+    "text": "{\n  o:\n  {\n    '''\n    мн\n    ключ\n    ''': 1\n    b: 2\n  }\n}\n",
+    "value": {
+      "o": {
+        "мн\nключ": 1,
+        "b": 2
+      }
+    }
+  },
+  {
+    "name": "stringify: multiline key with multiline off",
+    "input": {
+      "мн\nключ": 1
+    },
+    "options": {
+      "multiline": "off"
+    },
+    "text": "{\n  \"мн\\nключ\": 1\n}\n",
+    "value": {
+      "мн\nключ": 1
+    }
+  },
+  {
+    "name": "stringify: literal-like object values",
+    "input": {
+      "a": "1,5",
+      "b": "1, 2",
+      "c": "true, x",
+      "d": "2024-01-15, x",
+      "e": "1 // c",
+      "f": "true /* c */",
+      "g": "NaN, 1",
+      "h": "-0, x",
+      "i": "2024-01-15",
+      "j": "1e5",
+      "k": "2024-13-45"
+    },
+    "text": "{\n  a: 1,5\n  b: 1, 2\n  c: true, x\n  d: 2024-01-15, x\n  e: \"1 // c\"\n  f: \"true /* c */\"\n  g: NaN, 1\n  h: -0, x\n  i: \"2024-01-15\"\n  j: \"1e5\"\n  k: \"2024-13-45\"\n}\n",
+    "value": {
+      "a": "1,5",
+      "b": "1, 2",
+      "c": "true, x",
+      "d": "2024-01-15, x",
+      "e": "1 // c",
+      "f": "true /* c */",
+      "g": "NaN, 1",
+      "h": "-0, x",
+      "i": "2024-01-15",
+      "j": "1e5",
+      "k": "2024-13-45"
+    }
+  },
+  {
+    "name": "stringify: literal-like array items",
+    "input": {
+      "a": [
+        "1,5",
+        "true, x",
+        "x"
+      ]
+    },
+    "text": "{\n  a:\n  [\n    \"1,5\"\n    \"true, x\"\n    x\n  ]\n}\n",
+    "value": {
+      "a": [
+        "1,5",
+        "true, x",
+        "x"
+      ]
+    }
   }
 ]

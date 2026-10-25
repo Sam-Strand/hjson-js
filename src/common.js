@@ -105,6 +105,48 @@ export function tryParseNumber(text, stopAtNext = false) {
  * Специальные значения float, которые mkon пишет литералами.
  * Регистр важен: `nan`, `inf`, `Inf` — обычные строки.
  */
+/**
+ * Does the ',' at text[i] inside a quoteless object value separate pairs?
+ * Only when a key and ':' follow it on the same line, or nothing but a comment does:
+ *   a: P пара, кг/см2      -> "P пара, кг/см2"
+ *   a: x, y, b: 1          -> a = "x, y", b = 1
+ *   a: x,  // comment      -> a = "x"
+ * A quoteless key is text without {}[],: and line breaks; a quoted key is "…", '…' or '''…'''.
+ * Used by the parser and by stringify (to decide when an object value needs quotes).
+ */
+export function isPairSeparator(text, i) {
+    var j = i + 1, n = text.length, c
+    while (j < n && text[j] <= ' ' && text[j] !== '\n' && text[j] !== '\r') j++
+    c = text[j]
+    if (j >= n || c === '\n' || c === '\r' || c === '}' || c === ']') return true
+    if (c === '/' && (text[j + 1] === '/' || text[j + 1] === '*')) return true
+    if (c === '"' || c === "'") return quotedKeyFollows(text, j)
+    for (; j < n; j++) {
+        c = text[j]
+        if (c === ':') return true
+        if (c === ',' || c === '{' || c === '}' || c === '[' || c === ']' || c === '\n' || c === '\r') return false
+    }
+    return false
+}
+
+// text[j] is a quote: is it a quoted key followed by ':'?
+function quotedKeyFollows(text, j) {
+    var q = text[j], n = text.length
+    if (q === "'" && text.substr(j, 3) === "'''") {
+        var e = text.indexOf("'''", j + 3)
+        if (e < 0) return false
+        j = e + 3
+    } else {
+        for (j++; ; j++) {
+            if (j >= n || text[j] === '\n' || text[j] === '\r') return false
+            if (text[j] === '\\') { j++; continue }
+            if (text[j] === q) { j++; break }
+        }
+    }
+    while (j < n && text[j] <= ' ' && text[j] !== '\n') j++
+    return text[j] === ':'
+}
+
 export const SPECIAL_NUMBERS = {
     'NaN': NaN,
     'Infinity': Infinity,

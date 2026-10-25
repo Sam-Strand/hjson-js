@@ -1,4 +1,4 @@
-import { createComment, getComment, tryParseNumber, parseSpecialNumber, parseIsoDate } from './common.js'
+import { createComment, getComment, tryParseNumber, parseSpecialNumber, parseIsoDate, isPairSeparator } from './common.js'
 
 // Fast paths: runs of "ordinary" characters are consumed with sticky regexes.
 // Every decision of the parser is still taken on the same characters, in the same order.
@@ -8,8 +8,10 @@ const WHITE_RE = /(?:[\x00-\x20]+|\/\/[^\n]*|\/\*[\s\S]*?(?:\*\/|$))*/y
 const TFNNS_PLAIN_RE = /[^\r\n,{}\[\]\/]+/y
 // ordinary characters of a quoted string
 const STRING_PLAIN_RE = { '"': /[^"\\\n\r]+/y, "'": /[^'\\\n\r]+/y }
-// ordinary characters of a quoteless key
-const KEY_PLAIN_RE = /[^\x00-\x20{}\[\],:]+/y
+// a quoteless key: anything up to ':' except brackets, ',' and line breaks
+const KEY_PLAIN_RE = /[^\n\r{}\[\],:]*/y
+// value contexts for quoteless strings
+const IN_ARRAY = 1, IN_OBJECT = 2
 // leading whitespace of a line inside a ''' string / a line with some text
 const ML_INDENT_RE = /^[\x00-\x09\x0b-\x20]*/
 const ML_TEXT_RE = /[^\x00-\x09\x0b-\x20]/
@@ -154,30 +156,33 @@ export default function parse(source, opt) {
     }
 
     function keyname() {
-        // quotes for keys are optional in mkon
-        // unless they include {}[],: or whitespace.
+        // A key is a quoted string ("…", '…' or '''…''') or quoteless text up to ':'.
+        // A quoteless key may contain spaces; it cannot contain {}[],: or a line break.
 
-        if (ch === '"' || ch === "'") return string(false)
+        if (ch === '"' || ch === "'") return string(true)
 
-        var name = "", start = at, space = -1
-        for (; ;) {
-            if (ch === ':') {
-                if (!name) error("Found ':' but no key name (for an empty key name use quotes)")
-                else if (space >= 0 && space !== name.length) { at = start + space; error("Found whitespace in your key name (use quotes to include)"); }
-                return name
-            } else if (ch <= ' ') {
-                if (!ch) error("Found EOF while looking for a key name (check your syntax)")
-                else if (space < 0) space = name.length
-            } else if (isPunctuatorChar(ch)) {
-                error("Found '" + ch + "' where a key name was expected (check your syntax or use quotes if the key name includes {}[],: or whitespace)")
-            } else {
-                runAt(KEY_PLAIN_RE, text, at - 1)
-                name += text.slice(at - 1, KEY_PLAIN_RE.lastIndex)
-                jump(KEY_PLAIN_RE.lastIndex)
-                continue
-            }
-            next()
+        var start = at - 1
+        runAt(KEY_PLAIN_RE, text, start)
+        var end = KEY_PLAIN_RE.lastIndex
+        if (end > start) jump(end)
+        var name = text.slice(start, end), k = name.length
+        while (k > 0 && name[k - 1] <= ' ') k--  // whitespace before ':' is not part of the key
+        name = name.slice(0, k)
+
+        if (ch === ':') {
+            if (!name) error("Found ':' but no key name (for an empty key name use quotes)")
+            return name
         }
+        if (!ch) error("Found EOF while looking for a key name (check your syntax)")
+        if (ch === '\n' || ch === '\r') {
+            // the ':' may follow on a later line: "key\n  : value"
+            var lb = at
+            while (ch && ch <= ' ') next()
+            if (ch === ':' && name) return name
+            at = lb
+            error("Found a line break while looking for ':' after the key name (check your syntax)")
+        }
+        error("Found '" + ch + "' where a key name was expected (check your syntax or use quotes if the key name includes {}[],: or a line break)")
     }
 
     function white() {
@@ -196,9 +201,10 @@ export default function parse(source, opt) {
         // returns string, number (incl. NaN / ±Infinity), Date (ISO 8601), true, false, or null.
         //
         // Inside a container (array / object, including the braceless root object)
-        // a quoteless string ends at the first ',', '}' or ']' that is not inside
-        // a bracket pair opened within the string itself, e.g.
-        //   { a: x, b: [p, q] }   -> a = "x", b = ["p", "q"]
+        // a quoteless string ends at the first '}' or ']' that is not inside a bracket pair
+        // opened within the string itself, and at a ',' outside such brackets:
+        //   in an array    — at any ',':                     [a, b]          -> ["a", "b"]
+        //   in an object   — only when a key and ':' follow: { a: x, y, b: 1 } -> a = "x, y"
         //   { f: \frac{a,b}{c} }  -> f = "\frac{a,b}{c}"
         // A bare root value (no container) still runs to the end of the line.
         if (isPunctuatorChar(ch))
@@ -213,7 +219,8 @@ export default function parse(source, opt) {
             next()
             // (detection of ml strings was moved to string())
             var isEol = ch === '\r' || ch === '\n' || ch === ''
-            var isSep = ch === ',' || ch === '}' || ch === ']'
+            var isSep = ch === '}' || ch === ']' ||
+                ch === ',' && (inContainer !== IN_OBJECT || depth > 0 || isPairSeparator(text, at - 1))
             var endsString = isEol || inContainer && isSep && depth === 0
             if (endsString ||
                 isSep ||
@@ -342,7 +349,7 @@ export default function parse(source, opt) {
             }
 
             while (ch) {
-                array.push(value(true))
+                array.push(value(IN_ARRAY))
                 cAt = at
                 white()
                 // in mkon the comma is optional and trailing commas are allowed
@@ -402,7 +409,7 @@ export default function parse(source, opt) {
                 if (ch !== ':') error("Expected ':' instead of '" + ch + "'")
                 next()
                 // duplicate keys overwrite the previous value
-                object[key] = value(true)
+                object[key] = value(IN_OBJECT)
                 cAt = at
                 white()
                 // in mkon the comma is optional and trailing commas are allowed

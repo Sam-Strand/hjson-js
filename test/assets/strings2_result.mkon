@@ -1,6 +1,6 @@
 {
   key1: a key in single quotes
-  "key 2": a key in single quotes
+  key 2: a key in single quotes
   "key \"": a key in single quotes
   text:
   [

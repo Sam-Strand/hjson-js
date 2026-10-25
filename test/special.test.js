@@ -78,7 +78,10 @@ describe('special floats: NaN, Infinity, +Infinity, -Infinity, -0', () => {
         expect(out).toMatch(/c: "-Infinity"/)
         expect(out).toMatch(/d: "\+Infinity"/)
         expect(out).toMatch(/e: "-0"/)
-        expect(out).toMatch(/f: "NaN, x"/)
+        // in an object a ',' without a following key is text, so "NaN, x" needs no quotes
+        expect(out).toMatch(/f: NaN, x\n/)
+        // in an array the ',' separates, so it does
+        expect(s(['NaN, x'])).toMatch(/"NaN, x"/)
     })
 
     test('roundtrip keeps numbers numbers and strings strings', () => {

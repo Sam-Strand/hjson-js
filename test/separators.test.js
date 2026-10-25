@@ -1,8 +1,9 @@
 import { describe, expect, test } from 'vitest'
 import mkon from '../src/index.js'
 
-// Quoteless strings inside containers end at ',' / '}' / ']'
-// that are not inside a bracket pair opened within the string itself.
+// Quoteless strings inside containers end at '}' / ']' and ',' that are not inside a bracket
+// pair opened within the string itself. In an object a ',' ends the value only when a key
+// and ':' follow it on the same line (or nothing but a comment does).
 
 const p = (s) => mkon.parse(s)
 
@@ -75,8 +76,20 @@ describe('quoteless strings: separators', () => {
         expect(p('Hello, world')).toBe('Hello, world')
     })
 
-    test('a comma in text without quotes inside an object is now an error', () => {
-        expect(() => p('{\n  a: Hello, world\n}')).toThrow()
+    test('in an object a comma is text unless a key and ":" follow', () => {
+        expect(p('{\n  a: Hello, world\n}')).toEqual({ a: 'Hello, world' })
+        expect(p('header: ЭК-6. P пара, кг/см2')).toEqual({ header: 'ЭК-6. P пара, кг/см2' })
+        expect(p('{ a: x, y, b: 1 }')).toEqual({ a: 'x, y', b: 1 })
+        expect(p('{ a: 1,5, b: true, false }')).toEqual({ a: '1,5', b: 'true, false' })
+        expect(p('{ path: копия, C:\\data }')).toEqual({ path: 'копия', C: '\\data' })
+        expect(p('{ a: x, "k, 2": 2 }')).toEqual({ a: 'x', 'k, 2': 2 })
+        expect(p('{\n  a: x,  // c\n  b: y\n}')).toEqual({ a: 'x', b: 'y' })
+    })
+
+    test('keys may contain spaces and be multiline strings', () => {
+        expect(p('ЭК-6. P пара: 12.5')).toEqual({ 'ЭК-6. P пара': 12.5 })
+        expect(p("{\n  '''\n  a\n  b\n  ''': 1\n}")).toEqual({ 'a\nb': 1 })
+        expect(() => p('{\n  a b\n  c: 1\n}')).toThrow(/line break/)
     })
 
     test('stray closing bracket after a value is an error', () => {
@@ -88,8 +101,10 @@ describe('stringify quotes strings the parser would cut', () => {
     const rt = (v) => mkon.parse(mkon.stringify(v))
 
     test('values with separators are quoted', () => {
-        const s = mkon.stringify({ a: 'x, y', b: 'p}', c: 'q]', d: 'ok' })
-        expect(s).toMatch(/a: "x, y"/)
+        const s = mkon.stringify({ a: 'x, y', b: 'p}', c: 'q]', d: 'ok', e: 'x, y: z', l: ['x, y'] })
+        expect(s).toMatch(/a: x, y\n/)
+        expect(s).toMatch(/e: "x, y: z"/)
+        expect(s).toMatch(/"x, y"/)
         expect(s).toMatch(/b: "p}"/)
         expect(s).toMatch(/c: "q]"/)
         expect(s).toMatch(/d: ok/)

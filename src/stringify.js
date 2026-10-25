@@ -1,4 +1,4 @@
-import { tryParseNumber, getComment, forceComment, numberToString, isDate, dateToString, looksLikeIsoDate } from './common.js'
+import { tryParseNumber, getComment, forceComment, numberToString, isDate, dateToString, looksLikeIsoDate, isPairSeparator, parseSpecialNumber, parseIsoDate } from './common.js'
 import { normalizeOptions } from './options.js'
 
 // ============================================================================
@@ -100,7 +100,8 @@ export default function stringify(data, opt) {
         'g',
     )
     const startsWithKeyword = new RegExp('^(true|false|null|NaN|[+-]?Infinity)\\s*((,|\\]|\\}|//|/\\*).*)?$')
-    const needsEscapeName = /[,\{\[\}\]\s:"']|\/\/|\/\*/
+    // a quoteless key may contain spaces inside, but not {}[],: quotes, comment starts or line breaks
+    const needsEscapeName = new RegExp('^\\s|\\s$|[,{}\\[\\]:"\'\x00-\x1f' + commonRange + ']|\\/\\/|\\/\\*')
     const meta = {
         '\b': 'b', '\t': 't', '\n': 'n', '\f': 'f', '\r': 'r',
         '"': '"', "'": "'", '\\': '\\',
@@ -124,7 +125,7 @@ export default function stringify(data, opt) {
      * Inside containers a quoteless string ends at ',' / '}' / ']' that is
      * not inside a bracket pair opened within the string itself.
      */
-    function breaksQuoteless(s) {
+    function breaksQuoteless(s, inObject) {
         let depth = 0
         for (let i = 0; i < s.length; i++) {
             const c = s[i]
@@ -132,11 +133,33 @@ export default function stringify(data, opt) {
             else if (c === '}' || c === ']') {
                 if (depth === 0) return true
                 depth--
-            } else if (c === ',' && depth === 0) return true
+            } else if (c === ',' && depth === 0 && (!inObject || isPairSeparator(s, i))) return true
         }
         // an unclosed bracket would swallow the rest of the line
         // (matters when several values share a line, e.g. with `condense`)
         return depth > 0
+    }
+
+    /**
+     * Would the reader take this object value (no separator commas, no stray brackets)
+     * for a literal? It checks the whole text and each part before a comment start, as the
+     * reader does; a ',' inside an object value is text, so "1,5" or "true, x" stay strings.
+     */
+    function objectLiteral(s) {
+        const cands = [s]
+        for (let k = s.indexOf('/'); k >= 0; k = s.indexOf('/', k + 1)) {
+            if (s[k + 1] === '/' || s[k + 1] === '*') cands.push(s.slice(0, k))
+        }
+        for (const v of cands) {
+            const t = v.trim(), c = v[0]
+            if (t === 'true' || t === 'false' || t === 'null') return true
+            if (parseSpecialNumber(t) !== undefined) return true
+            if (c === '-' || (c >= '0' && c <= '9')) {
+                if (tryParseNumber(v) !== undefined) return true
+                try { if (parseIsoDate(t) !== undefined) return true } catch (e) { return true }
+            }
+        }
+        return false
     }
 
     function escapeRegExp(s) {
@@ -193,13 +216,16 @@ export default function stringify(data, opt) {
         needsQuotes.lastIndex = 0
         startsWithKeyword.lastIndex = 0
 
+        const inObject = !noIndent && !isRootObject
         if (
             quoteStrings || hasComment ||
             needsQuotes.test(string) ||
-            breaksQuoteless(string) ||
-            tryParseNumber(string, true) !== undefined ||
-            startsWithKeyword.test(string) ||
-            looksLikeIsoDate(string) ||
+            breaksQuoteless(string, inObject) ||
+            (inObject
+                ? objectLiteral(string)
+                : tryParseNumber(string, true) !== undefined ||
+                  startsWithKeyword.test(string) ||
+                  looksLikeIsoDate(string)) ||
             (isRootObject && string.indexOf(':') >= 0)
         ) {
             needsEscape.lastIndex = 0
@@ -235,9 +261,24 @@ export default function stringify(data, opt) {
         if (!name) return token.qkey[0] + token.qkey[1]
         if (quoteKeys || needsEscapeName.test(name)) {
             needsEscape.lastIndex = 0
-            return wrap(token.qkey, needsEscape.test(name) ? quoteReplace(name) : name)
+            if (!needsEscape.test(name)) return wrap(token.qkey, name)
+            // a key with line breaks is written as a ''' block (same rules as a value)
+            needsEscapeML.lastIndex = 0
+            if (multiline && name.indexOf('\n') >= 0 && !needsEscapeML.test(name)) return mlKey(name)
+            return wrap(token.qkey, quoteReplace(name))
         }
         return wrap(token.key, name)
+    }
+
+    function mlKey(name) {
+        // opening and closing ''' at the key column: the reader strips exactly `gap`
+        const a = name.split('\n')
+        let res = token.mstr[0]
+        for (let i = 0; i < a.length; i++) {
+            res += eol
+            if (a[i]) res += gap + a[i]
+        }
+        return res + eol + gap + token.mstr[1]
     }
 
     // ==================================================================
@@ -440,6 +481,7 @@ export default function stringify(data, opt) {
             wrapLen = 0
             const v = value[k]
             const qk = quoteKey(k) + token.col[0]
+            if (cpartial && qk.indexOf('\n') >= 0) cpartial.disabled = true
             const vs = str(v, comments && ca)
             partial.push(
                 qk +
