@@ -10,6 +10,7 @@ const TFNNS_PLAIN_RE = /[^\r\n,{}\[\]\/]+/y
 const STRING_PLAIN_RE = { '"': /[^"\\\n\r]+/y, "'": /[^'\\\n\r]+/y }
 // a quoteless key: anything up to ':' except brackets, ',' and line breaks
 const KEY_PLAIN_RE = /[^\n\r{}\[\],:]*/y
+const TRAILING = "Syntax error, found trailing characters"
 // value contexts for quoteless strings
 const IN_ARRAY = 1, IN_OBJECT = 2
 // leading whitespace of a line inside a ''' string / a line with some text
@@ -38,6 +39,29 @@ export default function parse(source, opt) {
     }
 
     var keepComments
+    var errors   // массив для режима восстановления: ошибки копятся, разбор продолжается
+    var recover = false
+
+    // записывает ошибку (режим восстановления); вторая ошибка в том же месте — следствие первой
+    function record(e) {
+        if (!errors.some(function (x) { return x.offset === e.offset })) errors.push(e)
+    }
+
+    // пропускает остаток строки после ошибки, но не дальше закрывающей скобки контейнера
+    function sync(from, closeCh) {
+        var i = Math.max(from, at - 1)
+        var quote = ''
+        for (; i < text.length && text[i] !== '\n'; i++) {
+            var c = text[i]
+            if (quote) {
+                if (c === '\\') i++
+                else if (c === quote) quote = ''
+            } else if (c === '"' || c === "'") quote = c
+            else if (c === closeCh) break
+        }
+        jump(i)
+        white()
+    }
 
     function resetAt() {
         at = 0
@@ -53,7 +77,15 @@ export default function parse(source, opt) {
         var i, col = 0, line = 1
         for (i = at - 1; i > 0 && text[i] !== '\n'; i--, col++) { }
         for (; i > 0; i--) if (text[i] === '\n') line++
-        throw new Error(m + " at line " + line + "," + col + " >>>" + text.substr(at - col, 20) + " ...")
+        var e = new Error(m + " at line " + line + "," + col + " >>>" + text.substr(at - col, 20) + " ...")
+        // точная позиция для редакторов: offset и column считаются с 0, line — с 1
+        var offset = Math.max(0, Math.min(at - 1, text.length))
+        var lineStart = text.lastIndexOf('\n', offset - 1) + 1
+        e.reason = m
+        e.offset = offset
+        e.line = text.slice(0, lineStart).split('\n').length
+        e.column = offset - lineStart
+        throw e
     }
 
     function next() {
@@ -349,7 +381,22 @@ export default function parse(source, opt) {
             }
 
             while (ch) {
-                array.push(value(IN_ARRAY))
+                if (recover && ch === '}') {
+                    // '}' внешнего объекта: скорее всего, массив забыли закрыть
+                    try { error("Missing ']' before '}'") } catch (e) { record(e) }
+                    return array
+                }
+                var itemAt = at
+                try {
+                    array.push(value(IN_ARRAY))
+                } catch (e) {
+                    if (!recover || e.offset === undefined) throw e
+                    record(e)
+                    sync(itemAt, ']')
+                    if (at <= itemAt) jump(itemAt)
+                    if (ch === ']') { next(); return array }
+                    continue
+                }
                 cAt = at
                 white()
                 // in mkon the comma is optional and trailing commas are allowed
@@ -362,7 +409,7 @@ export default function parse(source, opt) {
                 }
                 if (ch === ']') {
                     next()
-                    if (comments) comments.a[comments.a.length - 1][1] += nextComment || ""
+                    if (comments && comments.a.length) comments.a[comments.a.length - 1][1] += nextComment || ""
                     return array
                 }
                 white()
@@ -370,6 +417,12 @@ export default function parse(source, opt) {
 
             error("End of input while parsing an array (missing ']')")
         } catch (e) {
+            if (recover && e.offset !== undefined && !ch) {
+                // незакрытый массив в конце текста: ошибка записана, возвращаем прочитанное
+                e.hint = e.hint || errorClosingHint(array)
+                record(e)
+                return array
+            }
             e.hint = e.hint || errorClosingHint(array)
             throw e
         }
@@ -404,12 +457,27 @@ export default function parse(source, opt) {
                 return object
             }
             while (ch) {
-                key = keyname()
-                white()
-                if (ch !== ':') error("Expected ':' instead of '" + ch + "'")
-                next()
-                // duplicate keys overwrite the previous value
-                object[key] = value(IN_OBJECT)
+                if (recover && ch === ']' && !withoutBraces) {
+                    // ']' внешнего массива: скорее всего, объект забыли закрыть
+                    try { error("Missing '}' before ']'") } catch (e) { record(e) }
+                    return object
+                }
+                var memberAt = at
+                try {
+                    key = keyname()
+                    white()
+                    if (ch !== ':') error("Expected ':' instead of '" + ch + "'")
+                    next()
+                    // duplicate keys overwrite the previous value
+                    object[key] = value(IN_OBJECT)
+                } catch (e) {
+                    if (!recover || e.offset === undefined) throw e
+                    record(e)
+                    sync(memberAt, withoutBraces ? '' : '}')
+                    if (at <= memberAt) jump(memberAt)
+                    if (ch === '}' && !withoutBraces) { next(); return object }
+                    continue
+                }
                 cAt = at
                 white()
                 // in mkon the comma is optional and trailing commas are allowed
@@ -424,7 +492,7 @@ export default function parse(source, opt) {
                 }
                 if (ch === '}' && !withoutBraces) {
                     next()
-                    if (comments) comments.c[key][1] += nextComment || ""
+                    if (comments && comments.c[key]) comments.c[key][1] += nextComment || ""
                     return object
                 }
                 white()
@@ -433,6 +501,12 @@ export default function parse(source, opt) {
             if (withoutBraces) return object
             else error("End of input while parsing an object (missing '}')")
         } catch (e) {
+            if (recover && e.offset !== undefined && !ch) {
+                // незакрытый объект в конце текста: ошибка записана, возвращаем прочитанное
+                e.hint = e.hint || errorClosingHint(object)
+                record(e)
+                return object
+            }
             e.hint = e.hint || errorClosingHint(object)
             throw e
         }
@@ -454,7 +528,10 @@ export default function parse(source, opt) {
     function checkTrailing(v, c) {
         var cAt = at
         white()
-        if (ch) error("Syntax error, found trailing characters")
+        if (ch) {
+            if (!recover) error(TRAILING)
+            try { error(TRAILING) } catch (e) { record(e) }
+        }
         if (keepComments) {
             var b = c.join('\n'), a = readCommentAt(cAt).join('\n')
             // comments can only be attached to objects (containers and Date);
@@ -499,11 +576,29 @@ export default function parse(source, opt) {
             restoreState(state)
         }
 
+        var rec = recover
+        recover = false
         try {
             return checkTrailing(object(true), c)
         } catch (e) {
             restoreState(state)
-            return checkTrailing(value(), c)
+            try {
+                return checkTrailing(value(), c)
+            } catch (e2) {
+                // показываем ошибку того разбора, который продвинулся дальше по тексту
+                // текст из нескольких строк — точно объект; иначе — кто продвинулся дальше
+                var asObject = e2.reason === TRAILING ||
+                    e.offset > (e2.offset === undefined ? Infinity : e2.offset)
+                if (!rec) throw asObject ? e : e2
+                // режим восстановления: разбираем заново, собирая все ошибки
+                restoreState(state)
+                recover = true
+                if (asObject) return checkTrailing(object(true), c)
+                record(e2)
+                return undefined
+            }
+        } finally {
+            recover = rec
         }
     }
 
@@ -512,6 +607,10 @@ export default function parse(source, opt) {
     if (opt && typeof opt === 'object') {
         if (opt.dsf != null) throw new Error("The 'dsf' option was removed: mkon has no format plugins (NaN/Infinity and ISO dates are built in)")
         keepComments = opt.keepWsc
+        if (Array.isArray(opt.errors)) {
+            errors = opt.errors
+            recover = true
+        }
     }
     text = source
     resetAt()
